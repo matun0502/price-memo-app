@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="価格記録">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <title>日用品価格記録</title>
+  <style>
+    /* ページ全体の基本設定です */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fa;
+      color: #1f2937;
+      line-height: 1.6;
+      -webkit-text-size-adjust: 100%;
+      overscroll-behavior-y: none;
+    }
+
+    /* スマホで読みやすい横幅にしています */
+    .app {
+      width: min(100%, 720px);
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: calc(16px + env(safe-area-inset-top)) 18px 14px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 4px 0 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    main {
+      padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
+    }
+
+    section {
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    form,
+    .search-area {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      min-height: 56px;
+      padding: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #111827;
+      font-family: inherit;
+      font-size: 16px;
+    }
+
+    input:focus {
+      border-color: #2563eb;
+      outline: 3px solid rgba(37, 99, 235, 0.18);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    button {
+      min-height: 56px;
+      border: 0;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .item {
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .item-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .product-name {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .price {
+      min-width: fit-content;
+      color: #0f766e;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px 10px;
+      margin: 10px 0 0;
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .unit-price {
+      grid-column: 1 / -1;
+      margin-top: 4px;
+      padding: 10px 12px;
+      border-top: 1px solid #eef2f7;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 800;
+    }
+
+    .delete-button {
+      width: 100%;
+      min-height: 48px;
+      margin-top: 12px;
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .empty {
+      padding: 24px 12px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      color: #64748b;
+      text-align: center;
+    }
+
+    /* 広い画面では入力欄だけ2列にして、スマホでは1列のまま使いやすくします */
+    @media (min-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .meta {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 430px) {
+      header,
+      main {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .lead {
+        font-size: 13px;
+      }
+
+      .summary {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .item {
+        padding: 14px;
+      }
+
+      .price {
+        font-size: 19px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>日用品価格記録</h1>
+      <p class="lead">洗剤・シャンプー・調味料などの価格を比べやすく記録できます。</p>
+    </header>
+
+    <main>
+      <section aria-labelledby="form-title">
+        <h2 id="form-title">価格を登録</h2>
+
+        <form id="priceForm">
+          <div class="form-grid">
+            <label class="full">
+              商品名
+              <input id="productName" type="text" autocomplete="off" placeholder="例: 食器用洗剤" required>
+            </label>
+
+            <label>
+              店舗名
+              <input id="storeName" type="text" autocomplete="organization" placeholder="例: 近所のスーパー" required>
+            </label>
+
+            <label>
+              価格
+              <input id="price" type="number" inputmode="numeric" min="1" step="1" placeholder="例: 298" required>
+            </label>
+
+            <label>
+              容量 ml
+              <input id="volume" type="number" inputmode="numeric" min="1" step="1" placeholder="例: 500" required>
+            </label>
+
+            <label>
+              日付
+              <input id="date" type="date" required>
+            </label>
+          </div>
+
+          <button type="submit">登録する</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="list-title">
+        <h2 id="list-title">記録一覧</h2>
+
+        <div class="search-area">
+          <label>
+            検索
+            <input id="searchInput" type="search" autocomplete="off" placeholder="商品名・店舗名で検索">
+          </label>
+        </div>
+
+        <div class="summary">
+          <span id="countText">0件</span>
+          <span>100ml単価つき</span>
+        </div>
+
+        <div id="list" class="list"></div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // HTMLから使う部品を取り出して、JavaScriptで操作できるようにします
+    const form = document.getElementById("priceForm");
+    const productNameInput = document.getElementById("productName");
+    const storeNameInput = document.getElementById("storeName");
+    const priceInput = document.getElementById("price");
+    const volumeInput = document.getElementById("volume");
+    const dateInput = document.getElementById("date");
+    const searchInput = document.getElementById("searchInput");
+    const list = document.getElementById("list");
+    const countText = document.getElementById("countText");
+
+    // localStorageに保存すると、ブラウザを閉じても記録が残ります
+    const storageKey = "dailyPriceRecords";
+    let records = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    // 今日の日付を入力欄に自動で入れます
+    dateInput.value = new Date().toISOString().slice(0, 10);
+
+    function saveRecords() {
+      localStorage.setItem(storageKey, JSON.stringify(records));
+    }
+
+    function formatYen(number) {
+      return Number(number).toLocaleString("ja-JP") + "円";
+    }
+
+    function calculateUnitPrice(price, volume) {
+      return price / volume * 100;
+    }
+
+    function createId() {
+      // 古いブラウザでも動くように、randomUUIDが使えない時の予備を用意します
+      if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+
+      return Date.now().toString() + Math.random().toString(16).slice(2);
+    }
+
+    function escapeHtml(text) {
+      // 入力した文字にHTML記号があっても、表示が崩れないようにします
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function renderRecords() {
+      const keyword = searchInput.value.trim().toLowerCase();
+
+      // 検索文字がある場合は、商品名か店舗名に含まれる記録だけ表示します
+      const filteredRecords = records.filter((record) => {
+        const targetText = `${record.productName} ${record.storeName}`.toLowerCase();
+        return targetText.includes(keyword);
+      });
+
+      countText.textContent = `${filteredRecords.length}件`;
+
+      if (filteredRecords.length === 0) {
+        list.innerHTML = '<p class="empty">記録がありません</p>';
+        return;
+      }
+
+      list.innerHTML = filteredRecords.map((record) => {
+        const unitPrice = calculateUnitPrice(record.price, record.volume);
+        const productName = escapeHtml(record.productName);
+        const storeName = escapeHtml(record.storeName);
+        const date = escapeHtml(record.date);
+
+        return `
+          <article class="item">
+            <div class="item-top">
+              <p class="product-name">${productName}</p>
+              <span class="price">${formatYen(record.price)}</span>
+            </div>
+
+            <div class="meta">
+              <span>店舗: ${storeName}</span>
+              <span>容量: ${record.volume}ml</span>
+              <span>日付: ${date}</span>
+              <span class="unit-price">100ml単価: ${unitPrice.toFixed(1)}円</span>
+            </div>
+
+            <button class="delete-button" type="button" data-id="${record.id}">削除</button>
+          </article>
+        `;
+      }).join("");
+    }
+
+    form.addEventListener("submit", (event) => {
+      // フォーム送信時にページが再読み込みされないようにします
+      event.preventDefault();
+
+      const newRecord = {
+        id: createId(),
+        productName: productNameInput.value.trim(),
+        storeName: storeNameInput.value.trim(),
+        price: Number(priceInput.value),
+        volume: Number(volumeInput.value),
+        date: dateInput.value
+      };
+
+      records.unshift(newRecord);
+      saveRecords();
+      renderRecords();
+
+      form.reset();
+      dateInput.value = new Date().toISOString().slice(0, 10);
+      productNameInput.focus();
+    });
+
+    searchInput.addEventListener("input", renderRecords);
+
+    list.addEventListener("click", (event) => {
+      // 削除ボタンが押された時だけ、対象の記録を消します
+      if (!event.target.matches(".delete-button")) {
+        return;
+      }
+
+      const id = event.target.dataset.id;
+      records = records.filter((record) => record.id !== id);
+      saveRecords();
+      renderRecords();
+    });
+
+    renderRecords();
+  </script>
+</body>
+</html>
