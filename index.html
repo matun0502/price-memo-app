@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#2563eb">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="価格メモ">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <title>カテゴリ別価格メモ</title>
+  <style>
+    /* ページ全体の基本設定です */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fa;
+      color: #1f2937;
+      line-height: 1.6;
+      -webkit-text-size-adjust: 100%;
+      overscroll-behavior-y: none;
+    }
+
+    /* スマホで読みやすい横幅にしています */
+    .app {
+      width: min(100%, 720px);
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0 auto;
+      background: #ffffff;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      padding: calc(16px + env(safe-area-inset-top)) 18px 14px;
+      background: #ffffff;
+      border-bottom: 1px solid #e5e7eb;
+      box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 4px 0 0;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    main {
+      padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
+    }
+
+    section {
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    form,
+    .search-area {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: grid;
+      gap: 7px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 56px;
+      padding: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #ffffff;
+      color: #111827;
+      font-family: inherit;
+      font-size: 16px;
+    }
+
+    input[type="checkbox"] {
+      width: 24px;
+      min-height: 24px;
+      height: 24px;
+      padding: 0;
+      accent-color: #2563eb;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: #2563eb;
+      outline: 3px solid rgba(37, 99, 235, 0.18);
+    }
+
+    select {
+      appearance: none;
+      background-image: linear-gradient(45deg, transparent 50%, #64748b 50%),
+        linear-gradient(135deg, #64748b 50%, transparent 50%);
+      background-position: calc(100% - 20px) 24px, calc(100% - 14px) 24px;
+      background-repeat: no-repeat;
+      background-size: 6px 6px, 6px 6px;
+      padding-right: 42px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    button {
+      min-height: 56px;
+      border: 0;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 12px;
+      padding: 12px 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .bulk-actions {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .selected-count {
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .bulk-delete-button {
+      min-height: 44px;
+      padding: 0 14px;
+      background: #dc2626;
+    }
+
+    .bulk-delete-button:disabled {
+      background: #cbd5e1;
+      color: #64748b;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .item {
+      padding: 16px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+      cursor: pointer;
+    }
+
+    .item-top {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px 10px;
+    }
+
+    .select-record {
+      align-self: start;
+      padding-top: 2px;
+    }
+
+    .product-name {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .category-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-self: start;
+      grid-column: 2;
+      min-height: 28px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #047857;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .price {
+      grid-row: 1 / 3;
+      grid-column: 3;
+      align-self: start;
+      min-width: fit-content;
+      color: #0f766e;
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px 10px;
+      margin: 10px 0 0;
+      color: #475569;
+      font-size: 14px;
+    }
+
+    .capacity-per-yen {
+      grid-column: 1 / -1;
+      margin-top: 4px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-weight: 800;
+    }
+
+    .store-list {
+      display: grid;
+      gap: 6px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease, margin-top 0.25s ease;
+    }
+
+    .item.is-expanded .store-list {
+      max-height: 520px;
+      margin-top: 10px;
+    }
+
+    .store-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 10px;
+      align-items: center;
+      min-height: 44px;
+      padding: 8px 10px;
+      border: 0;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #475569;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+      text-align: left;
+    }
+
+    .store-price {
+      color: #0f766e;
+      font-weight: 800;
+    }
+
+    .delete-button {
+      width: 100%;
+      min-height: 48px;
+      margin-top: 12px;
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .detail-panel {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: none;
+      align-items: flex-end;
+      background: rgba(15, 23, 42, 0.45);
+      padding: 18px;
+      padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    }
+
+    .detail-panel.is-open {
+      display: flex;
+    }
+
+    .detail-box {
+      width: min(100%, 720px);
+      max-height: min(88vh, 760px);
+      margin: 0 auto;
+      overflow: auto;
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 16px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.22);
+    }
+
+    .detail-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .detail-head h2 {
+      margin: 0;
+    }
+
+    .close-button {
+      width: 44px;
+      min-height: 44px;
+      border-radius: 8px;
+      background: #f1f5f9;
+      color: #334155;
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .edit-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .cancel-button {
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .empty {
+      padding: 24px 12px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 8px;
+      color: #64748b;
+      text-align: center;
+    }
+
+    /* 広い画面では入力欄だけ2列にして、スマホでは1列のまま使いやすくします */
+    @media (min-width: 640px) {
+      .form-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .meta {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 430px) {
+      header,
+      main {
+        padding-left: 14px;
+        padding-right: 14px;
+      }
+
+      h1 {
+        font-size: 20px;
+      }
+
+      .lead {
+        font-size: 13px;
+      }
+
+      .summary {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .bulk-actions {
+        grid-template-columns: 1fr;
+      }
+
+      .detail-panel {
+        padding-left: 10px;
+        padding-right: 10px;
+      }
+
+      .edit-actions {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    @media (max-width: 390px) {
+      .item {
+        padding: 14px;
+      }
+
+      .item-top {
+        grid-template-columns: auto 1fr;
+      }
+
+      .price {
+        grid-row: auto;
+        grid-column: 2;
+        font-size: 19px;
+      }
+
+      .category-badge {
+        grid-column: 2;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>カテゴリ別価格メモ</h1>
+    </header>
+
+    <main>
+      <section aria-labelledby="form-title">
+        <h2 id="form-title">新規登録</h2>
+
+        <form id="priceForm" novalidate>
+          <div class="form-grid">
+            <label>
+              カテゴリ
+              <select id="category" required></select>
+            </label>
+
+            <label class="full">
+              商品名
+              <input id="productName" type="text" list="productNameOptions" autocomplete="off" placeholder="例: 食器用洗剤" required>
+            </label>
+
+            <label>
+              仕様
+              <input id="spec" type="text" list="specOptions" autocomplete="off" placeholder="例: 詰替">
+            </label>
+
+            <label>
+              容量
+              <input id="volume" type="text" autocomplete="off" placeholder="例: 500ml / 30枚" required>
+            </label>
+
+            <label>
+              店舗
+              <input id="storeName" type="text" list="storeNameOptions" autocomplete="organization" placeholder="例: 近所のスーパー" required>
+            </label>
+
+            <label>
+              価格
+              <input id="price" type="number" inputmode="numeric" min="1" step="1" placeholder="例: 298" required>
+            </label>
+
+            <label>
+              日付
+              <input id="date" type="date">
+            </label>
+
+          </div>
+
+          <button type="submit">登録する</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="list-title">
+        <h2 id="list-title">記録一覧</h2>
+
+        <div class="search-area">
+          <div class="filter-row">
+            <label>
+              カテゴリで絞り込み
+              <select id="categoryFilter">
+              </select>
+            </label>
+
+            <label>
+              商品名で検索
+              <input id="productSearchInput" type="search" autocomplete="off" placeholder="例: 洗剤">
+            </label>
+
+            <label>
+              仕様で検索
+              <input id="specSearchInput" type="search" autocomplete="off" placeholder="例: 詰替">
+            </label>
+
+            <label>
+              容量で検索
+              <input id="volumeSearchInput" type="search" autocomplete="off" placeholder="例: 500ml / 30枚">
+            </label>
+          </div>
+        </div>
+
+        <div class="summary">
+          <span id="countText">0件</span>
+          <span id="filterText">すべてのカテゴリ</span>
+        </div>
+
+        <div class="bulk-actions">
+          <span class="selected-count" id="selectedCountText">0件選択中</span>
+          <button class="bulk-delete-button" id="bulkDeleteButton" type="button" disabled>選択した記録を削除</button>
+        </div>
+
+        <div id="list" class="list"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="detail-panel" id="detailPanel" aria-hidden="true">
+    <div class="detail-box" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+      <div class="detail-head">
+        <h2 id="detail-title">詳細編集</h2>
+        <button class="close-button" id="closeDetailButton" type="button" aria-label="閉じる">×</button>
+      </div>
+
+      <form id="editForm" novalidate>
+        <input id="editId" type="hidden">
+
+        <div class="form-grid">
+          <label>
+            カテゴリ
+            <select id="editCategory" required></select>
+          </label>
+
+          <label class="full">
+            商品名
+            <input id="editProductName" type="text" list="productNameOptions" autocomplete="off" required>
+          </label>
+
+          <label>
+            仕様
+            <input id="editSpec" type="text" list="specOptions" autocomplete="off">
+          </label>
+
+          <label>
+            容量
+            <input id="editVolume" type="text" autocomplete="off" required>
+          </label>
+
+          <label>
+            店舗
+            <input id="editStoreName" type="text" list="storeNameOptions" autocomplete="organization" required>
+          </label>
+
+          <label>
+            価格
+            <input id="editPrice" type="number" inputmode="numeric" min="1" step="1" required>
+          </label>
+
+          <label>
+            日付
+            <input id="editDate" type="date">
+          </label>
+        </div>
+
+        <div class="edit-actions">
+          <button type="submit">保存する</button>
+          <button class="cancel-button" id="cancelEditButton" type="button">閉じる</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <datalist id="productNameOptions"></datalist>
+  <datalist id="storeNameOptions"></datalist>
+  <datalist id="specOptions"></datalist>
+
+  <script>
+    // HTMLから使う部品を取り出して、JavaScriptで操作できるようにします
+    const form = document.getElementById("priceForm");
+    const productNameInput = document.getElementById("productName");
+    const categoryInput = document.getElementById("category");
+    const specInput = document.getElementById("spec");
+    const storeNameInput = document.getElementById("storeName");
+    const priceInput = document.getElementById("price");
+    const volumeInput = document.getElementById("volume");
+    const dateInput = document.getElementById("date");
+    const productSearchInput = document.getElementById("productSearchInput");
+    const specSearchInput = document.getElementById("specSearchInput");
+    const volumeSearchInput = document.getElementById("volumeSearchInput");
+    const categoryFilter = document.getElementById("categoryFilter");
+    const list = document.getElementById("list");
+    const countText = document.getElementById("countText");
+    const filterText = document.getElementById("filterText");
+    const selectedCountText = document.getElementById("selectedCountText");
+    const bulkDeleteButton = document.getElementById("bulkDeleteButton");
+    const detailPanel = document.getElementById("detailPanel");
+    const editForm = document.getElementById("editForm");
+    const editIdInput = document.getElementById("editId");
+    const editCategoryInput = document.getElementById("editCategory");
+    const editProductNameInput = document.getElementById("editProductName");
+    const editSpecInput = document.getElementById("editSpec");
+    const editVolumeInput = document.getElementById("editVolume");
+    const editStoreNameInput = document.getElementById("editStoreName");
+    const editPriceInput = document.getElementById("editPrice");
+    const editDateInput = document.getElementById("editDate");
+    const closeDetailButton = document.getElementById("closeDetailButton");
+    const cancelEditButton = document.getElementById("cancelEditButton");
+    const productNameOptions = document.getElementById("productNameOptions");
+    const storeNameOptions = document.getElementById("storeNameOptions");
+    const specOptions = document.getElementById("specOptions");
+
+    // localStorageに保存すると、ブラウザを閉じても記録が残ります
+    const storageKey = "dailyPriceRecords";
+    const defaultCategories = ["洗濯", "トイレ", "お風呂", "オーラル", "キッチン", "リビング", "薬"];
+    let records = JSON.parse(localStorage.getItem(storageKey)) || [];
+    const categories = defaultCategories;
+    const selectedIds = new Set();
+    const expandedGroups = new Set();
+
+    // 日付は未入力でも登録できるように、初期値は空にします
+    dateInput.value = "";
+
+    function saveRecords() {
+      localStorage.setItem(storageKey, JSON.stringify(records));
+    }
+
+    function renderCategories(selectedCategory = categoryInput.value, selectedFilter = categoryFilter.value) {
+      // カテゴリ選択欄を、保存済みカテゴリから作り直します
+      categoryInput.innerHTML = categories.map((category) => {
+        const safeCategory = escapeHtml(category);
+        return `<option value="${safeCategory}">${safeCategory}</option>`;
+      }).join("");
+
+      editCategoryInput.innerHTML = categories.map((category) => {
+        const safeCategory = escapeHtml(category);
+        return `<option value="${safeCategory}">${safeCategory}</option>`;
+      }).join("");
+
+      categoryFilter.innerHTML = '<option value="すべて">すべて</option>' + categories.map((category) => {
+        const safeCategory = escapeHtml(category);
+        return `<option value="${safeCategory}">${safeCategory}</option>`;
+      }).join("");
+
+      categoryInput.value = categories.includes(selectedCategory) ? selectedCategory : categories[0];
+      categoryFilter.value = selectedFilter === "すべて" || categories.includes(selectedFilter) ? selectedFilter : "すべて";
+    }
+
+    function getUniqueValues(key) {
+      // recordsから空ではない値だけを取り出し、重複をなくして候補にします
+      return [...new Set(records.map((record) => String(record[key] || "").trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, "ja"));
+    }
+
+    function renderDatalist() {
+      // iPhone Safariでも確認しやすいよう、標準のdatalistだけで補完候補を作ります
+      const renderOptions = (values) => values.map((value) => {
+        const safeValue = escapeHtml(value);
+        return `<option value="${safeValue}"></option>`;
+      }).join("");
+
+      productNameOptions.innerHTML = renderOptions(getUniqueValues("productName"));
+      storeNameOptions.innerHTML = renderOptions(getUniqueValues("storeName"));
+      specOptions.innerHTML = renderOptions(getUniqueValues("spec"));
+    }
+
+    function openDetail(recordId) {
+      const record = records.find((item) => item.id === recordId);
+
+      if (!record) {
+        return;
+      }
+
+      renderCategories(record.category || "キッチン", categoryFilter.value);
+      editIdInput.value = record.id;
+      editCategoryInput.value = record.category || "キッチン";
+      editProductNameInput.value = record.productName || "";
+      editSpecInput.value = record.spec || "";
+      editVolumeInput.value = record.volume || "";
+      editStoreNameInput.value = record.storeName || "";
+      editPriceInput.value = record.price || "";
+      editDateInput.value = record.date || "";
+      detailPanel.classList.add("is-open");
+      detailPanel.setAttribute("aria-hidden", "false");
+      editProductNameInput.focus();
+    }
+
+    function closeDetail() {
+      detailPanel.classList.remove("is-open");
+      detailPanel.setAttribute("aria-hidden", "true");
+      editForm.reset();
+    }
+
+    function updateSelectedControls() {
+      const selectedCount = selectedIds.size;
+      selectedCountText.textContent = `${selectedCount}件選択中`;
+      bulkDeleteButton.disabled = selectedCount === 0;
+    }
+
+    function formatYen(number) {
+      return Number(number).toLocaleString("ja-JP") + "円";
+    }
+
+    function formatCapacityPerYen(volume, price) {
+      // 容量は「500ml」「30枚」のような文字から数値と単位を取り出して計算します
+      const match = String(volume || "").match(/^([0-9]+(?:\.[0-9]+)?)(.*)$/);
+      const volumeNumber = match ? Number(match[1]) : NaN;
+      const unit = match ? match[2].trim() : "";
+
+      if (!Number.isFinite(volumeNumber) || !Number.isFinite(price) || price <= 0) {
+        return "-";
+      }
+
+      const roundedValue = Math.round((volumeNumber / price) * 100) / 100;
+      return `${roundedValue}${unit}/円`;
+    }
+
+    function createId() {
+      // 古いブラウザでも動くように、randomUUIDが使えない時の予備を用意します
+      if (typeof crypto !== "undefined" && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+
+      return Date.now().toString() + Math.random().toString(16).slice(2);
+    }
+
+    function escapeHtml(text) {
+      // 入力した文字にHTML記号があっても、表示が崩れないようにします
+      return String(text)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function groupRecords(targetRecords) {
+      // 商品名・仕様・容量が同じ記録を、1つの商品グループとしてまとめます
+      const groups = new Map();
+
+      targetRecords.forEach((record) => {
+        const productName = record.productName || "";
+        const spec = record.spec || "";
+        const volume = record.volume || "";
+        const groupKey = `${productName}\u001f${spec}\u001f${volume}`;
+
+        if (!groups.has(groupKey)) {
+          groups.set(groupKey, {
+            groupKey,
+            productName,
+            spec,
+            volume,
+            category: record.category || "キッチン",
+            ids: [],
+            stores: []
+          });
+        }
+
+        const group = groups.get(groupKey);
+        const price = Number(record.price);
+        group.ids.push(record.id);
+        group.stores.push({
+          id: record.id,
+          storeName: record.storeName || "",
+          price,
+          date: record.date || ""
+        });
+      });
+
+      return Array.from(groups.values()).map((group) => {
+        group.stores.sort((a, b) => a.price - b.price);
+        return group;
+      });
+    }
+
+    function renderRecords() {
+      const productKeyword = productSearchInput.value.trim().toLowerCase();
+      const specKeyword = specSearchInput.value.trim().toLowerCase();
+      const volumeKeyword = volumeSearchInput.value.trim().toLowerCase();
+      const selectedCategory = categoryFilter.value;
+
+      // カテゴリと検索文字に合う記録だけを表示します
+      const filteredRecords = records.filter((record) => {
+        const category = record.category || "キッチン";
+        const productName = String(record.productName || "").toLowerCase();
+        const spec = String(record.spec || "").toLowerCase();
+        const volume = String(record.volume || "").toLowerCase();
+        const matchesCategory = selectedCategory === "すべて" || category === selectedCategory;
+        const matchesProduct = productName.includes(productKeyword);
+        const matchesSpec = spec.includes(specKeyword);
+        const matchesVolume = volume.includes(volumeKeyword);
+
+        return matchesCategory && matchesProduct && matchesSpec && matchesVolume;
+      });
+
+      const groupedRecords = groupRecords(filteredRecords);
+
+      countText.textContent = `${groupedRecords.length}商品 / ${filteredRecords.length}件`;
+      filterText.textContent = selectedCategory === "すべて" ? "すべてのカテゴリ" : selectedCategory;
+      updateSelectedControls();
+
+      if (groupedRecords.length === 0) {
+        list.innerHTML = '<p class="empty">記録がありません</p>';
+        return;
+      }
+
+      list.innerHTML = groupedRecords.map((group) => {
+        const firstId = group.ids[0];
+        const safeGroupKey = encodeURIComponent(group.groupKey);
+        const safeIds = group.ids.map((id) => escapeHtml(id)).join(",");
+        const productName = escapeHtml(group.productName);
+        const productTitle = [group.productName, group.spec, group.volume]
+          .filter((text) => text !== "")
+          .map((text) => escapeHtml(text))
+          .join(" ");
+        const category = escapeHtml(group.category);
+        const spec = escapeHtml(group.spec || "-");
+        const volume = escapeHtml(group.volume || "-");
+        const prices = group.stores.map((store) => store.price);
+        const lowestPrice = Math.min(...prices);
+        const lowestStore = group.stores.find((store) => store.price === lowestPrice);
+        const lowestStoreName = escapeHtml(lowestStore?.storeName || "-");
+        const storeCount = group.stores.length;
+        const capacityPerYen = escapeHtml(formatCapacityPerYen(group.volume, lowestPrice));
+        const allSelected = group.ids.every((id) => selectedIds.has(id));
+        const checked = allSelected ? "checked" : "";
+        const isExpanded = expandedGroups.has(group.groupKey);
+        const expandedClass = isExpanded ? " is-expanded" : "";
+        const storeRows = group.stores.map((store) => {
+          const storeName = escapeHtml(store.storeName || "-");
+          const date = escapeHtml(store.date || "-");
+
+          return `
+            <button class="store-row" type="button" data-id="${store.id}">
+              <span>${storeName} / ${date}</span>
+              <span class="store-price">${formatYen(store.price)}</span>
+            </button>
+          `;
+        }).join("");
+
+        return `
+          <article class="item${expandedClass}" data-id="${firstId}" data-ids="${safeIds}" data-group-key="${safeGroupKey}" aria-expanded="${isExpanded}" tabindex="0">
+            <div class="item-top">
+              <input class="select-record" type="checkbox" data-ids="${safeIds}" aria-label="${productName}を選択" ${checked}>
+              <p class="product-name">${productTitle}</p>
+              <span class="category-badge">${category}</span>
+              <span class="price">最安 ${formatYen(lowestPrice)}（${lowestStoreName}）</span>
+            </div>
+
+            <div class="meta">
+              <span>仕様: ${spec}</span>
+              <span>容量: ${volume}</span>
+              <span>${storeCount}店舗</span>
+              <span class="capacity-per-yen">1円あたりの容量: ${capacityPerYen}</span>
+            </div>
+
+            <div class="store-list">${storeRows}</div>
+
+            <button class="delete-button" type="button" data-ids="${safeIds}">削除</button>
+          </article>
+        `;
+      }).join("");
+    }
+
+    form.addEventListener("submit", (event) => {
+      // フォーム送信時にページが再読み込みされないようにします
+      event.preventDefault();
+
+      if (!form.reportValidity()) {
+        return;
+      }
+
+      const newRecord = {
+        id: createId(),
+        productName: productNameInput.value.trim(),
+        category: categoryInput.value,
+        spec: specInput.value.trim(),
+        storeName: storeNameInput.value.trim(),
+        price: Number(priceInput.value),
+        volume: volumeInput.value.trim(),
+        date: dateInput.value
+      };
+
+      records.unshift(newRecord);
+      saveRecords();
+      renderDatalist();
+      renderRecords();
+
+      const selectedCategory = categoryInput.value;
+      form.reset();
+      dateInput.value = "";
+      renderCategories(selectedCategory, categoryFilter.value);
+      productNameInput.focus();
+    });
+
+    productSearchInput.addEventListener("input", renderRecords);
+    specSearchInput.addEventListener("input", renderRecords);
+    volumeSearchInput.addEventListener("input", renderRecords);
+    categoryFilter.addEventListener("change", renderRecords);
+
+    list.addEventListener("click", (event) => {
+      if (event.target.closest(".store-row")) {
+        openDetail(event.target.closest(".store-row").dataset.id);
+        return;
+      }
+
+      // 削除ボタンが押された時だけ、対象の記録を消します
+      if (event.target.matches(".delete-button")) {
+        const ids = event.target.dataset.ids.split(",");
+        ids.forEach((id) => selectedIds.delete(id));
+        records = records.filter((record) => !ids.includes(record.id));
+        saveRecords();
+        renderDatalist();
+        renderRecords();
+        return;
+      }
+
+      if (event.target.matches(".select-record")) {
+        const ids = event.target.dataset.ids.split(",");
+
+        if (event.target.checked) {
+          ids.forEach((id) => selectedIds.add(id));
+        } else {
+          ids.forEach((id) => selectedIds.delete(id));
+        }
+
+        updateSelectedControls();
+        return;
+      }
+
+      const item = event.target.closest(".item");
+
+      if (!item) {
+        return;
+      }
+
+      const groupKey = decodeURIComponent(item.dataset.groupKey);
+
+      if (expandedGroups.has(groupKey)) {
+        expandedGroups.delete(groupKey);
+      } else {
+        expandedGroups.add(groupKey);
+      }
+
+      renderRecords();
+    });
+
+    list.addEventListener("keydown", (event) => {
+      if (event.target.matches(".store-row") && event.key === "Enter") {
+        openDetail(event.target.dataset.id);
+        return;
+      }
+
+      if (event.target.matches(".select-record") || event.key !== "Enter") {
+        return;
+      }
+
+      const item = event.target.closest(".item");
+
+      if (item) {
+        const groupKey = decodeURIComponent(item.dataset.groupKey);
+
+        if (expandedGroups.has(groupKey)) {
+          expandedGroups.delete(groupKey);
+        } else {
+          expandedGroups.add(groupKey);
+        }
+
+        renderRecords();
+      }
+    });
+
+    editForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      if (!editForm.reportValidity()) {
+        return;
+      }
+
+      const id = editIdInput.value;
+      const record = records.find((item) => item.id === id);
+
+      if (!record) {
+        closeDetail();
+        return;
+      }
+
+      record.category = editCategoryInput.value;
+      record.productName = editProductNameInput.value.trim();
+      record.spec = editSpecInput.value.trim();
+      record.volume = editVolumeInput.value.trim();
+      record.storeName = editStoreNameInput.value.trim();
+      record.price = Number(editPriceInput.value);
+      record.date = editDateInput.value;
+
+      saveRecords();
+      renderDatalist();
+      renderRecords();
+      closeDetail();
+    });
+
+    closeDetailButton.addEventListener("click", closeDetail);
+    cancelEditButton.addEventListener("click", closeDetail);
+
+    detailPanel.addEventListener("click", (event) => {
+      if (event.target === detailPanel) {
+        closeDetail();
+      }
+    });
+
+    bulkDeleteButton.addEventListener("click", () => {
+      if (selectedIds.size === 0) {
+        return;
+      }
+
+      records = records.filter((record) => !selectedIds.has(record.id));
+      selectedIds.clear();
+      saveRecords();
+      renderDatalist();
+      renderRecords();
+    });
+
+    renderCategories();
+    renderDatalist();
+    updateSelectedControls();
+    renderRecords();
+  </script>
+</body>
+</html>
