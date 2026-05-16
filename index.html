@@ -8,7 +8,7 @@
   <meta name="apple-mobile-web-app-title" content="価格メモ">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="format-detection" content="telephone=no">
-  <title>カテゴリ別価格メモ</title>
+  <title>価格記録アプリ</title>
   <style>
     /* ページ全体の基本設定です */
     * {
@@ -445,100 +445,173 @@
         grid-column: 2;
       }
     }
+
+    /* Accordion (mobile-first, minimal) */
+    .accordion-section {
+      border-radius: 8px;
+      overflow: visible;
+    }
+
+    .accordion-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding: 16px 14px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #0f172a;
+      background: #e2e8f0;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      text-align: left;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .accordion-header:focus {
+      outline: 3px solid rgba(37,99,235,0.18);
+      border-radius: 12px;
+    }
+
+    .accordion-content {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 260ms ease, padding 260ms ease;
+      padding: 0 0;
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-top: 0;
+      border-radius: 0 0 12px 12px;
+    }
+
+    .accordion-indicator {
+      transition: transform 200ms ease;
+      font-size: 14px;
+      color: #64748b;
+      margin-left: 8px;
+    }
+
+    .accordion-section:not(.is-open) .accordion-indicator {
+      transform: rotate(-90deg);
+    }
+
+    .accordion-content {
+      overflow: hidden;
+      max-height: 0;
+      transition: max-height 260ms ease, padding 260ms ease;
+      padding: 0 0;
+    }
+
+    .accordion-section.is-open .accordion-content {
+      /* max-height is set dynamically from JS for smooth animation */
+      padding-top: 12px;
+    }
   </style>
 </head>
 <body>
   <div class="app">
     <header>
-      <h1>カテゴリ別価格メモ</h1>
+      <h1>価格記録アプリ</h1>
     </header>
 
     <main>
-      <section aria-labelledby="form-title">
-        <h2 id="form-title">新規登録</h2>
+      <section class="accordion-section is-open" aria-labelledby="list-title">
+        <button class="accordion-header" aria-expanded="true" aria-controls="list-section-content">
+          <span id="list-title">検索一覧表示</span>
+          <span class="accordion-indicator">▾</span>
+        </button>
 
-        <form id="priceForm" novalidate>
-          <div class="form-grid">
-            <label>
-              カテゴリ
-              <select id="category" required></select>
-            </label>
+        <div class="accordion-content" id="list-section-content">
+          <div class="search-area">
+            <div class="filter-row">
+              <label>
+                カテゴリで絞り込み
+                <select id="categoryFilter">
+                </select>
+              </label>
 
-            <label class="full">
-              商品名
-              <input id="productName" type="text" list="productNameOptions" autocomplete="off" placeholder="例: 食器用洗剤" required>
-            </label>
+              <label>
+                商品名で検索
+                <input id="productSearchInput" type="search" autocomplete="off" placeholder="例: 洗剤">
+              </label>
 
-            <label>
-              仕様
-              <input id="spec" type="text" list="specOptions" autocomplete="off" placeholder="例: 詰替">
-            </label>
+              <label>
+                仕様で検索
+                <input id="specSearchInput" type="search" autocomplete="off" placeholder="例: 詰替">
+              </label>
 
-            <label>
-              容量
-              <input id="volume" type="text" autocomplete="off" placeholder="例: 500ml / 30枚" required>
-            </label>
-
-            <label>
-              店舗
-              <input id="storeName" type="text" list="storeNameOptions" autocomplete="organization" placeholder="例: 近所のスーパー" required>
-            </label>
-
-            <label>
-              価格
-              <input id="price" type="number" inputmode="numeric" min="1" step="1" placeholder="例: 298" required>
-            </label>
-
-            <label>
-              日付
-              <input id="date" type="date">
-            </label>
-
+              <label>
+                容量で検索
+                <input id="volumeSearchInput" type="search" autocomplete="off" placeholder="例: 500ml / 30枚">
+              </label>
+            </div>
           </div>
 
-          <button type="submit">登録する</button>
-        </form>
+          <div class="summary">
+            <span id="countText">0件</span>
+            <span id="filterText">すべてのカテゴリ</span>
+          </div>
+
+          <div class="bulk-actions">
+            <span class="selected-count" id="selectedCountText">0件選択中</span>
+            <button class="bulk-delete-button" id="bulkDeleteButton" type="button" disabled>選択した記録を削除</button>
+          </div>
+
+          <div id="list" class="list"></div>
+        </div>
       </section>
 
-      <section aria-labelledby="list-title">
-        <h2 id="list-title">記録一覧</h2>
+      <section class="accordion-section" aria-labelledby="form-title">
+        <button class="accordion-header" aria-expanded="false" aria-controls="form-section-content">
+          <span id="form-title">新規登録</span>
+          <span class="accordion-indicator">▾</span>
+        </button>
 
-        <div class="search-area">
-          <div class="filter-row">
-            <label>
-              カテゴリで絞り込み
-              <select id="categoryFilter">
-              </select>
-            </label>
+        <div class="accordion-content" id="form-section-content">
+          <form id="priceForm" novalidate>
+            <div class="form-grid">
+              <label>
+                カテゴリ
+                <select id="category" required></select>
+              </label>
 
-            <label>
-              商品名で検索
-              <input id="productSearchInput" type="search" autocomplete="off" placeholder="例: 洗剤">
-            </label>
+              <label class="full">
+                商品名
+                <input id="productName" type="text" list="productNameOptions" autocomplete="off" placeholder="例: 食器用洗剤" required>
+              </label>
 
-            <label>
-              仕様で検索
-              <input id="specSearchInput" type="search" autocomplete="off" placeholder="例: 詰替">
-            </label>
+              <label>
+                仕様
+                <input id="spec" type="text" list="specOptions" autocomplete="off" placeholder="例: 詰替">
+              </label>
 
-            <label>
-              容量で検索
-              <input id="volumeSearchInput" type="search" autocomplete="off" placeholder="例: 500ml / 30枚">
-            </label>
-          </div>
+              <label>
+                容量
+                <input id="volume" type="text" autocomplete="off" placeholder="例: 500ml / 30枚" required>
+              </label>
+
+              <label>
+                店舗
+                <input id="storeName" type="text" list="storeNameOptions" autocomplete="organization" placeholder="例: 近所のスーパー" required>
+              </label>
+
+              <label>
+                価格
+                <input id="price" type="number" inputmode="numeric" min="1" step="1" placeholder="例: 298" required>
+              </label>
+
+              <label>
+                日付
+                <input id="date" type="date">
+              </label>
+
+            </div>
+
+            <button type="submit">登録する</button>
+          </form>
         </div>
-
-        <div class="summary">
-          <span id="countText">0件</span>
-          <span id="filterText">すべてのカテゴリ</span>
-        </div>
-
-        <div class="bulk-actions">
-          <span class="selected-count" id="selectedCountText">0件選択中</span>
-          <button class="bulk-delete-button" id="bulkDeleteButton" type="button" disabled>選択した記録を削除</button>
-        </div>
-
-        <div id="list" class="list"></div>
       </section>
     </main>
   </div>
@@ -645,8 +718,51 @@
     const selectedIds = new Set();
     const expandedGroups = new Set();
 
-    // 日付は未入力でも登録できるように、初期値は空にします
-    dateInput.value = "";
+    // Accordion: シンプルな開閉制御（モバイルファースト、可読性重視）
+    (function initAccordions() {
+      const sections = document.querySelectorAll('.accordion-section');
+
+      function setContentHeight(content, open) {
+        if (!content) return;
+        if (open) {
+          // 一旦最大値を設定してスムーズに開く
+          content.style.maxHeight = content.scrollHeight + 'px';
+        } else {
+          content.style.maxHeight = '0';
+        }
+      }
+
+      sections.forEach((section) => {
+        const header = section.querySelector('.accordion-header');
+        const content = section.querySelector('.accordion-content');
+        if (!header || !content) return;
+
+        const expanded = header.getAttribute('aria-expanded') === 'true';
+        if (expanded) section.classList.add('is-open');
+        setContentHeight(content, expanded);
+
+        header.addEventListener('click', () => {
+          const isOpen = section.classList.toggle('is-open');
+          header.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+          setContentHeight(content, isOpen);
+
+          if (isOpen) {
+            const focusable = content.querySelector('input, select, textarea, button');
+            if (focusable) focusable.focus();
+          }
+        });
+
+        // ウィンドウリサイズ時に開いているコンテンツの高さを再計算
+        window.addEventListener('resize', () => {
+          if (section.classList.contains('is-open')) {
+            content.style.maxHeight = content.scrollHeight + 'px';
+          }
+        });
+      });
+    })();
+
+    // 日付は新規登録時に今日の日付をセットします
+    dateInput.value = getTodayDateISO();
 
     function saveRecords() {
       localStorage.setItem(storageKey, JSON.stringify(records));
@@ -749,6 +865,14 @@
       }
 
       return Date.now().toString() + Math.random().toString(16).slice(2);
+    }
+
+    function getTodayDateISO() {
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, "0");
+      const day = String(today.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
     }
 
     function escapeHtml(text) {
@@ -915,7 +1039,7 @@
 
       const selectedCategory = categoryInput.value;
       form.reset();
-      dateInput.value = "";
+      dateInput.value = getTodayDateISO();
       renderCategories(selectedCategory, categoryFilter.value);
       productNameInput.focus();
     });
