@@ -103,6 +103,66 @@
       accent-color: #2563eb;
     }
 
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 56px;
+      padding: 10px 0;
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .checkbox-row input {
+      flex: 0 0 auto;
+    }
+
+    .sale-fields {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.24s ease;
+    }
+
+    .sale-fields.is-open {
+      max-height: 260px;
+    }
+
+    .price-group {
+      grid-column: 1 / -1;
+      display: grid;
+      gap: 14px;
+      padding: 14px;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      background: #f8fafc;
+    }
+
+    .price-group.sale-fields {
+      gap: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      border-width: 0;
+      background: transparent;
+    }
+
+    .price-group.sale-fields.is-open {
+      gap: 14px;
+      padding: 14px;
+      border-width: 1px;
+      background: #f8fafc;
+    }
+
+    .price-group-title {
+      margin: 0;
+      color: #334155;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
     input:focus,
     select:focus {
       border-color: #2563eb;
@@ -247,6 +307,34 @@
       color: #0f766e;
       font-size: 20px;
       font-weight: 800;
+    }
+
+    .price-block {
+      grid-row: 1 / 3;
+      grid-column: 3;
+      display: grid;
+      gap: 6px;
+      align-self: start;
+      justify-items: end;
+      min-width: fit-content;
+    }
+
+    .price-line {
+      color: #0f766e;
+      font-size: 18px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .price-date {
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .old-price {
+      color: #dc2626;
     }
 
     .meta {
@@ -441,6 +529,12 @@
         font-size: 19px;
       }
 
+      .price-block {
+        grid-row: auto;
+        grid-column: 2;
+        justify-items: start;
+      }
+
       .category-badge {
         grid-column: 2;
       }
@@ -457,7 +551,8 @@
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      padding: 16px 14px;
+      min-height: 58px;
+      padding: 16px 18px;
       font-size: 16px;
       font-weight: 800;
       color: #0f172a;
@@ -468,6 +563,12 @@
       cursor: pointer;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
+      transition: background 180ms ease, border-color 180ms ease;
+    }
+
+    .accordion-section.is-open .accordion-header {
+      background: #dbeafe;
+      border-color: #bfdbfe;
     }
 
     .accordion-header:focus {
@@ -487,10 +588,18 @@
     }
 
     .accordion-indicator {
-      transition: transform 200ms ease;
-      font-size: 14px;
-      color: #64748b;
-      margin-left: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      margin-left: 14px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.7);
+      color: #334155;
+      font-size: 22px;
+      line-height: 1;
+      transition: transform 200ms ease, background 180ms ease;
     }
 
     .accordion-section:not(.is-open) .accordion-indicator {
@@ -505,7 +614,7 @@
     }
 
     .accordion-section.is-open .accordion-content {
-      /* max-height is set dynamically from JS for smooth animation */
+      overflow: visible;
       padding-top: 12px;
     }
   </style>
@@ -534,12 +643,17 @@
 
               <label>
                 商品名で検索
-                <input id="productSearchInput" type="search" autocomplete="off" placeholder="例: 洗剤">
+                <input id="productSearchInput" type="search" list="productNameOptions" autocomplete="off" placeholder="例: 洗剤">
               </label>
 
               <label>
                 仕様で検索
-                <input id="specSearchInput" type="search" autocomplete="off" placeholder="例: 詰替">
+                <input id="specSearchInput" type="search" list="specOptions" autocomplete="off" placeholder="例: 詰替">
+              </label>
+
+              <label>
+                店舗で検索
+                <input id="storeSearchInput" type="search" list="storeNameOptions" autocomplete="off" placeholder="例: 近所のスーパー">
               </label>
 
               <label>
@@ -597,15 +711,38 @@
                 <input id="storeName" type="text" list="storeNameOptions" autocomplete="organization" placeholder="例: 近所のスーパー" required>
               </label>
 
-              <label>
-                価格
-                <input id="price" type="number" inputmode="numeric" min="1" step="1" placeholder="例: 298" required>
+              <div class="price-group">
+                <p class="price-group-title">【通常】</p>
+
+                <label>
+                  通常価格
+                  <input id="normalPrice" type="number" inputmode="numeric" min="1" step="1" placeholder="例: 298" required>
+                </label>
+
+                <label>
+                  確認日
+                  <input id="normalPriceDate" type="date" required>
+                </label>
+              </div>
+
+              <label class="full checkbox-row">
+                <input id="useSalePrice" type="checkbox">
+                セール価格を登録する
               </label>
 
-              <label>
-                日付
-                <input id="date" type="date">
-              </label>
+              <div class="price-group sale-fields" id="saleFields">
+                <p class="price-group-title">【セール】</p>
+
+                <label>
+                  セール価格
+                  <input id="salePrice" type="number" inputmode="numeric" min="1" step="1" placeholder="例: 198">
+                </label>
+
+                <label>
+                  確認日
+                  <input id="salePriceDate" type="date">
+                </label>
+              </div>
 
             </div>
 
@@ -653,13 +790,23 @@
           </label>
 
           <label>
-            価格
-            <input id="editPrice" type="number" inputmode="numeric" min="1" step="1" required>
+            通常価格
+            <input id="editNormalPrice" type="number" inputmode="numeric" min="1" step="1" required>
           </label>
 
           <label>
-            日付
-            <input id="editDate" type="date">
+            通常確認日
+            <input id="editNormalPriceDate" type="date" required>
+          </label>
+
+          <label>
+            セール価格
+            <input id="editSalePrice" type="number" inputmode="numeric" min="1" step="1">
+          </label>
+
+          <label>
+            セール確認日
+            <input id="editSalePriceDate" type="date">
           </label>
         </div>
 
@@ -682,11 +829,16 @@
     const categoryInput = document.getElementById("category");
     const specInput = document.getElementById("spec");
     const storeNameInput = document.getElementById("storeName");
-    const priceInput = document.getElementById("price");
+    const normalPriceInput = document.getElementById("normalPrice");
+    const normalPriceDateInput = document.getElementById("normalPriceDate");
+    const useSalePriceInput = document.getElementById("useSalePrice");
+    const saleFields = document.getElementById("saleFields");
+    const salePriceInput = document.getElementById("salePrice");
+    const salePriceDateInput = document.getElementById("salePriceDate");
     const volumeInput = document.getElementById("volume");
-    const dateInput = document.getElementById("date");
     const productSearchInput = document.getElementById("productSearchInput");
     const specSearchInput = document.getElementById("specSearchInput");
+    const storeSearchInput = document.getElementById("storeSearchInput");
     const volumeSearchInput = document.getElementById("volumeSearchInput");
     const categoryFilter = document.getElementById("categoryFilter");
     const list = document.getElementById("list");
@@ -702,8 +854,10 @@
     const editSpecInput = document.getElementById("editSpec");
     const editVolumeInput = document.getElementById("editVolume");
     const editStoreNameInput = document.getElementById("editStoreName");
-    const editPriceInput = document.getElementById("editPrice");
-    const editDateInput = document.getElementById("editDate");
+    const editNormalPriceInput = document.getElementById("editNormalPrice");
+    const editNormalPriceDateInput = document.getElementById("editNormalPriceDate");
+    const editSalePriceInput = document.getElementById("editSalePrice");
+    const editSalePriceDateInput = document.getElementById("editSalePriceDate");
     const closeDetailButton = document.getElementById("closeDetailButton");
     const cancelEditButton = document.getElementById("cancelEditButton");
     const productNameOptions = document.getElementById("productNameOptions");
@@ -713,7 +867,7 @@
     // localStorageに保存すると、ブラウザを閉じても記録が残ります
     const storageKey = "dailyPriceRecords";
     const defaultCategories = ["洗濯", "トイレ", "お風呂", "オーラル", "キッチン", "リビング", "薬"];
-    let records = JSON.parse(localStorage.getItem(storageKey)) || [];
+    let records = loadRecords();
     const categories = defaultCategories;
     const selectedIds = new Set();
     const expandedGroups = new Set();
@@ -727,7 +881,16 @@
         if (open) {
           // 一旦最大値を設定してスムーズに開く
           content.style.maxHeight = content.scrollHeight + 'px';
+          window.setTimeout(() => {
+            if (content.closest(".accordion-section")?.classList.contains("is-open")) {
+              content.style.maxHeight = "none";
+            }
+          }, 280);
         } else {
+          if (content.style.maxHeight === "none") {
+            content.style.maxHeight = content.scrollHeight + "px";
+            content.offsetHeight;
+          }
           content.style.maxHeight = '0';
         }
       }
@@ -755,18 +918,64 @@
         // ウィンドウリサイズ時に開いているコンテンツの高さを再計算
         window.addEventListener('resize', () => {
           if (section.classList.contains('is-open')) {
-            content.style.maxHeight = content.scrollHeight + 'px';
+            content.style.maxHeight = "none";
           }
         });
       });
     })();
 
-    // 日付は新規登録時に今日の日付をセットします
-    dateInput.value = getTodayDateISO();
+    function refreshOpenAccordions() {
+      // 入力欄や一覧が増減しても、開いているアコーディオンをクリップしないようにします
+      document.querySelectorAll(".accordion-section.is-open .accordion-content").forEach((content) => {
+        content.style.maxHeight = "none";
+      });
+    }
+
+    function updateSaleFields() {
+      if (useSalePriceInput.checked) {
+        saleFields.classList.add("is-open");
+
+        if (salePriceDateInput.value === "") {
+          salePriceDateInput.value = getTodayDateISO();
+        }
+      } else {
+        saleFields.classList.remove("is-open");
+        salePriceInput.value = "";
+        salePriceDateInput.value = "";
+      }
+
+      requestAnimationFrame(refreshOpenAccordions);
+    }
+
+    // 通常価格の確認日は、新規登録時に今日の日付をセットします
+    normalPriceDateInput.value = getTodayDateISO();
+    updateSaleFields();
 
     function saveRecords() {
       localStorage.setItem(storageKey, JSON.stringify(records));
     }
+
+    function loadRecords() {
+      try {
+        const savedRecords = JSON.parse(localStorage.getItem(storageKey)) || [];
+        return migrateRecords(Array.isArray(savedRecords) ? savedRecords : []);
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function migrateRecords(savedRecords) {
+      // 旧データの price/date は、通常価格 normalPrice/normalPriceDate として扱います
+      return savedRecords.map((record) => ({
+        ...record,
+        normalPrice: record.normalPrice ?? record.price ?? "",
+        normalPriceDate: record.normalPriceDate ?? record.date ?? "",
+        salePrice: record.salePrice ?? "",
+        salePriceDate: record.salePriceDate ?? ""
+      }));
+    }
+
+    saveRecords();
 
     function renderCategories(selectedCategory = categoryInput.value, selectedFilter = categoryFilter.value) {
       // カテゴリ選択欄を、保存済みカテゴリから作り直します
@@ -791,8 +1000,7 @@
 
     function getUniqueValues(key) {
       // recordsから空ではない値だけを取り出し、重複をなくして候補にします
-      return [...new Set(records.map((record) => String(record[key] || "").trim()).filter(Boolean))]
-        .sort((a, b) => a.localeCompare(b, "ja"));
+      return [...new Set(records.map((record) => String(record[key] || "").trim()).filter(Boolean))];
     }
 
     function renderDatalist() {
@@ -821,8 +1029,10 @@
       editSpecInput.value = record.spec || "";
       editVolumeInput.value = record.volume || "";
       editStoreNameInput.value = record.storeName || "";
-      editPriceInput.value = record.price || "";
-      editDateInput.value = record.date || "";
+      editNormalPriceInput.value = record.normalPrice || "";
+      editNormalPriceDateInput.value = record.normalPriceDate || "";
+      editSalePriceInput.value = record.salePrice || "";
+      editSalePriceDateInput.value = record.salePriceDate || "";
       detailPanel.classList.add("is-open");
       detailPanel.setAttribute("aria-hidden", "false");
       editProductNameInput.focus();
@@ -842,6 +1052,41 @@
 
     function formatYen(number) {
       return Number(number).toLocaleString("ja-JP") + "円";
+    }
+
+    function getDaysAgo(dateText) {
+      if (!dateText) {
+        return null;
+      }
+
+      const today = new Date();
+      const targetDate = new Date(`${dateText}T00:00:00`);
+
+      if (Number.isNaN(targetDate.getTime())) {
+        return null;
+      }
+
+      today.setHours(0, 0, 0, 0);
+      return Math.floor((today - targetDate) / 86400000);
+    }
+
+    function formatDaysAgo(dateText) {
+      const daysAgo = getDaysAgo(dateText);
+
+      if (daysAgo === null) {
+        return "-";
+      }
+
+      if (daysAgo <= 0) {
+        return "今日";
+      }
+
+      return `${daysAgo}日前`;
+    }
+
+    function getDateClass(dateText) {
+      const daysAgo = getDaysAgo(dateText);
+      return daysAgo !== null && daysAgo >= 30 ? " old-price" : "";
     }
 
     function formatCapacityPerYen(volume, price) {
@@ -908,18 +1153,21 @@
         }
 
         const group = groups.get(groupKey);
-        const price = Number(record.price);
+        const normalPrice = Number(record.normalPrice);
+        const salePrice = record.salePrice === "" ? NaN : Number(record.salePrice);
         group.ids.push(record.id);
         group.stores.push({
           id: record.id,
           storeName: record.storeName || "",
-          price,
-          date: record.date || ""
+          normalPrice,
+          normalPriceDate: record.normalPriceDate || "",
+          salePrice,
+          salePriceDate: record.salePriceDate || ""
         });
       });
 
       return Array.from(groups.values()).map((group) => {
-        group.stores.sort((a, b) => a.price - b.price);
+        group.stores.sort((a, b) => a.normalPrice - b.normalPrice);
         return group;
       });
     }
@@ -927,6 +1175,7 @@
     function renderRecords() {
       const productKeyword = productSearchInput.value.trim().toLowerCase();
       const specKeyword = specSearchInput.value.trim().toLowerCase();
+      const storeKeyword = storeSearchInput.value.trim().toLowerCase();
       const volumeKeyword = volumeSearchInput.value.trim().toLowerCase();
       const selectedCategory = categoryFilter.value;
 
@@ -935,13 +1184,15 @@
         const category = record.category || "キッチン";
         const productName = String(record.productName || "").toLowerCase();
         const spec = String(record.spec || "").toLowerCase();
+        const storeName = String(record.storeName || "").toLowerCase();
         const volume = String(record.volume || "").toLowerCase();
         const matchesCategory = selectedCategory === "すべて" || category === selectedCategory;
         const matchesProduct = productName.includes(productKeyword);
         const matchesSpec = spec.includes(specKeyword);
+        const matchesStore = storeName.includes(storeKeyword);
         const matchesVolume = volume.includes(volumeKeyword);
 
-        return matchesCategory && matchesProduct && matchesSpec && matchesVolume;
+        return matchesCategory && matchesProduct && matchesSpec && matchesStore && matchesVolume;
       });
 
       const groupedRecords = groupRecords(filteredRecords);
@@ -952,6 +1203,7 @@
 
       if (groupedRecords.length === 0) {
         list.innerHTML = '<p class="empty">記録がありません</p>';
+        requestAnimationFrame(refreshOpenAccordions);
         return;
       }
 
@@ -967,24 +1219,40 @@
         const category = escapeHtml(group.category);
         const spec = escapeHtml(group.spec || "-");
         const volume = escapeHtml(group.volume || "-");
-        const prices = group.stores.map((store) => store.price);
-        const lowestPrice = Math.min(...prices);
-        const lowestStore = group.stores.find((store) => store.price === lowestPrice);
-        const lowestStoreName = escapeHtml(lowestStore?.storeName || "-");
+        const normalPrices = group.stores.map((store) => store.normalPrice).filter(Number.isFinite);
+        const salePrices = group.stores.map((store) => store.salePrice).filter(Number.isFinite);
+        const lowestNormalPrice = normalPrices.length > 0 ? Math.min(...normalPrices) : 0;
+        const lowestSalePrice = salePrices.length > 0 ? Math.min(...salePrices) : null;
+        const lowestNormalStore = group.stores.find((store) => store.normalPrice === lowestNormalPrice);
+        const lowestSaleStore = lowestSalePrice === null ? null : group.stores.find((store) => store.salePrice === lowestSalePrice);
+        const lowestNormalStoreName = escapeHtml(lowestNormalStore?.storeName || "-");
+        const lowestSaleStoreName = escapeHtml(lowestSaleStore?.storeName || "-");
+        const normalDateText = escapeHtml(formatDaysAgo(lowestNormalStore?.normalPriceDate || ""));
+        const saleDateText = escapeHtml(formatDaysAgo(lowestSaleStore?.salePriceDate || ""));
+        const normalDateClass = getDateClass(lowestNormalStore?.normalPriceDate || "");
+        const saleDateClass = getDateClass(lowestSaleStore?.salePriceDate || "");
         const storeCount = group.stores.length;
-        const capacityPerYen = escapeHtml(formatCapacityPerYen(group.volume, lowestPrice));
+        const capacityPerYen = escapeHtml(formatCapacityPerYen(group.volume, lowestNormalPrice));
         const allSelected = group.ids.every((id) => selectedIds.has(id));
         const checked = allSelected ? "checked" : "";
         const isExpanded = expandedGroups.has(group.groupKey);
         const expandedClass = isExpanded ? " is-expanded" : "";
+        const salePriceHtml = lowestSalePrice === null ? "" : `
+          <div>
+            <div class="price-line">セール最安 ${formatYen(lowestSalePrice)}（${lowestSaleStoreName}）</div>
+            <div class="price-date${saleDateClass}">${saleDateText}</div>
+          </div>
+        `;
         const storeRows = group.stores.map((store) => {
           const storeName = escapeHtml(store.storeName || "-");
-          const date = escapeHtml(store.date || "-");
+          const normalDate = escapeHtml(formatDaysAgo(store.normalPriceDate || ""));
+          const salePrice = Number.isFinite(store.salePrice) ? ` / セール ${formatYen(store.salePrice)}` : "";
+          const saleDate = Number.isFinite(store.salePrice) ? ` / ${escapeHtml(formatDaysAgo(store.salePriceDate || ""))}` : "";
 
           return `
             <button class="store-row" type="button" data-id="${store.id}">
-              <span>${storeName} / ${date}</span>
-              <span class="store-price">${formatYen(store.price)}</span>
+              <span>${storeName} / ${normalDate}${saleDate}</span>
+              <span class="store-price">通常 ${formatYen(store.normalPrice)}${salePrice}</span>
             </button>
           `;
         }).join("");
@@ -995,7 +1263,13 @@
               <input class="select-record" type="checkbox" data-ids="${safeIds}" aria-label="${productName}を選択" ${checked}>
               <p class="product-name">${productTitle}</p>
               <span class="category-badge">${category}</span>
-              <span class="price">最安 ${formatYen(lowestPrice)}（${lowestStoreName}）</span>
+              <div class="price-block">
+                <div>
+                  <div class="price-line">通常最安 ${lowestNormalPrice > 0 ? formatYen(lowestNormalPrice) : "-"}（${lowestNormalStoreName}）</div>
+                  <div class="price-date${normalDateClass}">${normalDateText}</div>
+                </div>
+                ${salePriceHtml}
+              </div>
             </div>
 
             <div class="meta">
@@ -1011,6 +1285,7 @@
           </article>
         `;
       }).join("");
+      requestAnimationFrame(refreshOpenAccordions);
     }
 
     form.addEventListener("submit", (event) => {
@@ -1027,9 +1302,11 @@
         category: categoryInput.value,
         spec: specInput.value.trim(),
         storeName: storeNameInput.value.trim(),
-        price: Number(priceInput.value),
+        normalPrice: Number(normalPriceInput.value),
+        normalPriceDate: normalPriceDateInput.value,
+        salePrice: useSalePriceInput.checked && salePriceInput.value !== "" ? Number(salePriceInput.value) : "",
+        salePriceDate: useSalePriceInput.checked ? salePriceDateInput.value : "",
         volume: volumeInput.value.trim(),
-        date: dateInput.value
       };
 
       records.unshift(newRecord);
@@ -1039,15 +1316,18 @@
 
       const selectedCategory = categoryInput.value;
       form.reset();
-      dateInput.value = getTodayDateISO();
+      normalPriceDateInput.value = getTodayDateISO();
+      updateSaleFields();
       renderCategories(selectedCategory, categoryFilter.value);
       productNameInput.focus();
     });
 
     productSearchInput.addEventListener("input", renderRecords);
     specSearchInput.addEventListener("input", renderRecords);
+    storeSearchInput.addEventListener("input", renderRecords);
     volumeSearchInput.addEventListener("input", renderRecords);
     categoryFilter.addEventListener("change", renderRecords);
+    useSalePriceInput.addEventListener("change", updateSaleFields);
 
     list.addEventListener("click", (event) => {
       if (event.target.closest(".store-row")) {
@@ -1141,8 +1421,12 @@
       record.spec = editSpecInput.value.trim();
       record.volume = editVolumeInput.value.trim();
       record.storeName = editStoreNameInput.value.trim();
-      record.price = Number(editPriceInput.value);
-      record.date = editDateInput.value;
+      record.normalPrice = Number(editNormalPriceInput.value);
+      record.normalPriceDate = editNormalPriceDateInput.value;
+      record.salePrice = editSalePriceInput.value === "" ? "" : Number(editSalePriceInput.value);
+      record.salePriceDate = editSalePriceDateInput.value;
+      delete record.price;
+      delete record.date;
 
       saveRecords();
       renderDatalist();
