@@ -4,10 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#2563eb">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="価格メモ">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="format-detection" content="telephone=no">
+  <link rel="icon" type="image/png" href="icon.png">
+  <link rel="apple-touch-icon" href="icon.png">
   <title>価格記録アプリ</title>
   <style>
     /* ページ全体の基本設定です */
@@ -32,6 +35,8 @@
       min-height: 100dvh;
       margin: 0 auto;
       background: #ffffff;
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
     }
 
     header {
@@ -866,6 +871,7 @@
 
     // localStorageに保存すると、ブラウザを閉じても記録が残ります
     const storageKey = "dailyPriceRecords";
+    const localUserId = "local-user";
     const defaultCategories = ["洗濯", "トイレ", "お風呂", "オーラル", "キッチン", "リビング", "薬"];
     let records = loadRecords();
     const categories = defaultCategories;
@@ -964,15 +970,28 @@
       }
     }
 
+    function getNowISO() {
+      return new Date().toISOString();
+    }
+
     function migrateRecords(savedRecords) {
       // 旧データの price/date は、通常価格 normalPrice/normalPriceDate として扱います
-      return savedRecords.map((record) => ({
-        ...record,
-        normalPrice: record.normalPrice ?? record.price ?? "",
-        normalPriceDate: record.normalPriceDate ?? record.date ?? "",
-        salePrice: record.salePrice ?? "",
-        salePriceDate: record.salePriceDate ?? ""
-      }));
+      return savedRecords.map((record) => {
+        const createdAt = record.createdAt || getNowISO();
+
+        return {
+          ...record,
+          id: record.id || createId(),
+          normalPrice: record.normalPrice ?? record.price ?? "",
+          normalPriceDate: record.normalPriceDate ?? record.date ?? "",
+          salePrice: record.salePrice ?? "",
+          salePriceDate: record.salePriceDate ?? "",
+          createdAt,
+          updatedAt: record.updatedAt || createdAt,
+          createdBy: record.createdBy || localUserId,
+          updatedBy: record.updatedBy || localUserId
+        };
+      });
     }
 
     saveRecords();
@@ -1296,6 +1315,7 @@
         return;
       }
 
+      const createdAt = getNowISO();
       const newRecord = {
         id: createId(),
         productName: productNameInput.value.trim(),
@@ -1307,6 +1327,10 @@
         salePrice: useSalePriceInput.checked && salePriceInput.value !== "" ? Number(salePriceInput.value) : "",
         salePriceDate: useSalePriceInput.checked ? salePriceDateInput.value : "",
         volume: volumeInput.value.trim(),
+        createdAt,
+        updatedAt: createdAt,
+        createdBy: localUserId,
+        updatedBy: localUserId
       };
 
       records.unshift(newRecord);
@@ -1425,6 +1449,11 @@
       record.normalPriceDate = editNormalPriceDateInput.value;
       record.salePrice = editSalePriceInput.value === "" ? "" : Number(editSalePriceInput.value);
       record.salePriceDate = editSalePriceDateInput.value;
+      record.id = record.id || createId();
+      record.createdAt = record.createdAt || getNowISO();
+      record.updatedAt = getNowISO();
+      record.createdBy = record.createdBy || localUserId;
+      record.updatedBy = localUserId;
       delete record.price;
       delete record.date;
 
