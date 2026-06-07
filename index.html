@@ -55,6 +55,23 @@
       letter-spacing: 0;
     }
 
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .quick-action-button {
+      min-height: 48px;
+      padding: 0 12px;
+      border: 1px solid #cbd5e1;
+      background: #f8fafc;
+      color: #1e40af;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
     .lead {
       margin: 4px 0 0;
       color: #6b7280;
@@ -67,6 +84,7 @@
 
     section {
       margin-bottom: 20px;
+      scroll-margin-top: 132px;
     }
 
     h2 {
@@ -628,10 +646,14 @@
   <div class="app">
     <header>
       <h1>価格記録アプリ</h1>
+      <div class="quick-actions" aria-label="よく使う操作">
+        <button class="quick-action-button" id="openSearchButton" type="button">検索を開く</button>
+        <button class="quick-action-button" id="openFormButton" type="button">新規登録を開く</button>
+      </div>
     </header>
 
     <main>
-      <section class="accordion-section is-open" aria-labelledby="list-title">
+      <section class="accordion-section is-open" id="searchSection" aria-labelledby="list-title">
         <button class="accordion-header" aria-expanded="true" aria-controls="list-section-content">
           <span id="list-title">検索一覧表示</span>
           <span class="accordion-indicator">▾</span>
@@ -682,7 +704,7 @@
         </div>
       </section>
 
-      <section class="accordion-section" aria-labelledby="form-title">
+      <section class="accordion-section" id="registerSection" aria-labelledby="form-title">
         <button class="accordion-header" aria-expanded="false" aria-controls="form-section-content">
           <span id="form-title">新規登録</span>
           <span class="accordion-indicator">▾</span>
@@ -721,7 +743,7 @@
 
                 <label>
                   通常価格
-                  <input id="normalPrice" type="number" inputmode="numeric" min="1" step="1" placeholder="例: 298" required>
+                  <input id="normalPrice" type="text" inputmode="numeric" pattern="[1-9１-９][0-9０-９]*" placeholder="例: 298" required>
                 </label>
 
                 <label>
@@ -740,7 +762,7 @@
 
                 <label>
                   セール価格
-                  <input id="salePrice" type="number" inputmode="numeric" min="1" step="1" placeholder="例: 198">
+                  <input id="salePrice" type="text" inputmode="numeric" pattern="[1-9１-９][0-9０-９]*" placeholder="例: 198">
                 </label>
 
                 <label>
@@ -794,25 +816,38 @@
             <input id="editStoreName" type="text" list="storeNameOptions" autocomplete="organization" required>
           </label>
 
-          <label>
-            通常価格
-            <input id="editNormalPrice" type="number" inputmode="numeric" min="1" step="1" required>
+          <div class="price-group">
+            <p class="price-group-title">【通常】</p>
+
+            <label>
+              通常価格
+              <input id="editNormalPrice" type="text" inputmode="numeric" pattern="[1-9１-９][0-9０-９]*" placeholder="例: 298" required>
+            </label>
+
+            <label>
+              確認日
+              <input id="editNormalPriceDate" type="date" required>
+            </label>
+          </div>
+
+          <label class="full checkbox-row">
+            <input id="editUseSalePrice" type="checkbox">
+            セール価格を登録する
           </label>
 
-          <label>
-            通常確認日
-            <input id="editNormalPriceDate" type="date" required>
-          </label>
+          <div class="price-group sale-fields" id="editSaleFields">
+            <p class="price-group-title">【セール】</p>
 
-          <label>
-            セール価格
-            <input id="editSalePrice" type="number" inputmode="numeric" min="1" step="1">
-          </label>
+            <label>
+              セール価格
+              <input id="editSalePrice" type="text" inputmode="numeric" pattern="[1-9１-９][0-9０-９]*" placeholder="例: 198">
+            </label>
 
-          <label>
-            セール確認日
-            <input id="editSalePriceDate" type="date">
-          </label>
+            <label>
+              確認日
+              <input id="editSalePriceDate" type="date">
+            </label>
+          </div>
         </div>
 
         <div class="edit-actions">
@@ -830,6 +865,10 @@
   <script>
     // HTMLから使う部品を取り出して、JavaScriptで操作できるようにします
     const form = document.getElementById("priceForm");
+    const openSearchButton = document.getElementById("openSearchButton");
+    const openFormButton = document.getElementById("openFormButton");
+    const searchSection = document.getElementById("searchSection");
+    const registerSection = document.getElementById("registerSection");
     const productNameInput = document.getElementById("productName");
     const categoryInput = document.getElementById("category");
     const specInput = document.getElementById("spec");
@@ -861,6 +900,8 @@
     const editStoreNameInput = document.getElementById("editStoreName");
     const editNormalPriceInput = document.getElementById("editNormalPrice");
     const editNormalPriceDateInput = document.getElementById("editNormalPriceDate");
+    const editUseSalePriceInput = document.getElementById("editUseSalePrice");
+    const editSaleFields = document.getElementById("editSaleFields");
     const editSalePriceInput = document.getElementById("editSalePrice");
     const editSalePriceDateInput = document.getElementById("editSalePriceDate");
     const closeDetailButton = document.getElementById("closeDetailButton");
@@ -937,6 +978,24 @@
       });
     }
 
+    function openSectionAndScroll(section) {
+      const header = section.querySelector(".accordion-header");
+      const content = section.querySelector(".accordion-content");
+
+      if (!header || !content) {
+        return;
+      }
+
+      section.classList.add("is-open");
+      header.setAttribute("aria-expanded", "true");
+      content.style.maxHeight = content.scrollHeight + "px";
+
+      window.setTimeout(() => {
+        content.style.maxHeight = "none";
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 120);
+    }
+
     function updateSaleFields() {
       if (useSalePriceInput.checked) {
         saleFields.classList.add("is-open");
@@ -953,11 +1012,54 @@
       requestAnimationFrame(refreshOpenAccordions);
     }
 
+    function updateEditSaleFields() {
+      if (editUseSalePriceInput.checked) {
+        editSaleFields.classList.add("is-open");
+
+        if (editSalePriceDateInput.value === "") {
+          editSalePriceDateInput.value = getTodayDateISO();
+        }
+      } else {
+        editSaleFields.classList.remove("is-open");
+        editSalePriceInput.value = "";
+        editSalePriceDateInput.value = "";
+      }
+    }
+
     // 通常価格の確認日は、新規登録時に今日の日付をセットします
     normalPriceDateInput.value = getTodayDateISO();
     updateSaleFields();
 
+    function ensureUniqueRecordIds() {
+      const usedIds = new Set();
+      let changed = false;
+
+      records.forEach((record) => {
+        let id = record.id ? String(record.id) : "";
+
+        if (id === "" || usedIds.has(id)) {
+          id = createId();
+          changed = true;
+        }
+
+        while (usedIds.has(id)) {
+          id = createId();
+          changed = true;
+        }
+
+        if (record.id !== id) {
+          record.id = id;
+          changed = true;
+        }
+
+        usedIds.add(id);
+      });
+
+      return changed;
+    }
+
     function saveRecords() {
+      ensureUniqueRecordIds();
       localStorage.setItem(storageKey, JSON.stringify(records));
     }
 
@@ -975,15 +1077,27 @@
     }
 
     function migrateRecords(savedRecords) {
-      // 旧データの price/date は、通常価格 normalPrice/normalPriceDate として扱います
+      const usedIds = new Set();
+
       return savedRecords.map((record) => {
         const createdAt = record.createdAt || getNowISO();
+        let id = record.id ? String(record.id) : "";
+
+        if (id === "" || usedIds.has(id)) {
+          id = createId();
+        }
+
+        while (usedIds.has(id)) {
+          id = createId();
+        }
+
+        usedIds.add(id);
 
         return {
           ...record,
-          id: record.id || createId(),
-          normalPrice: record.normalPrice ?? record.price ?? "",
-          normalPriceDate: record.normalPriceDate ?? record.date ?? "",
+          id,
+          normalPrice: record.normalPrice ?? "",
+          normalPriceDate: record.normalPriceDate ?? "",
           salePrice: record.salePrice ?? "",
           salePriceDate: record.salePriceDate ?? "",
           createdAt,
@@ -1050,8 +1164,10 @@
       editStoreNameInput.value = record.storeName || "";
       editNormalPriceInput.value = record.normalPrice || "";
       editNormalPriceDateInput.value = record.normalPriceDate || "";
+      editUseSalePriceInput.checked = (record.salePrice !== "" && record.salePrice !== null && record.salePrice !== undefined) || Boolean(record.salePriceDate);
       editSalePriceInput.value = record.salePrice || "";
       editSalePriceDateInput.value = record.salePriceDate || "";
+      editSaleFields.classList.toggle("is-open", editUseSalePriceInput.checked);
       detailPanel.classList.add("is-open");
       detailPanel.setAttribute("aria-hidden", "false");
       editProductNameInput.focus();
@@ -1061,6 +1177,7 @@
       detailPanel.classList.remove("is-open");
       detailPanel.setAttribute("aria-hidden", "true");
       editForm.reset();
+      editSaleFields.classList.remove("is-open");
     }
 
     function updateSelectedControls() {
@@ -1106,6 +1223,23 @@
     function getDateClass(dateText) {
       const daysAgo = getDaysAgo(dateText);
       return daysAgo !== null && daysAgo >= 30 ? " old-price" : "";
+    }
+
+    function normalizeVolume(value) {
+      // 容量だけ、保存時に全角英数字と全角スペースを半角へそろえます
+      return String(value || "")
+        .replace(/[０-９Ａ-Ｚａ-ｚ]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+        .replace(/　/g, " ")
+        .trim();
+    }
+
+    function normalizePrice(value) {
+      // 価格は全角数字を半角へそろえてから数値として保存します
+      const normalizedValue = String(value || "")
+        .replace(/[０-９]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0))
+        .trim();
+
+      return Number(normalizedValue);
     }
 
     function formatCapacityPerYen(volume, price) {
@@ -1192,6 +1326,10 @@
     }
 
     function renderRecords() {
+      if (ensureUniqueRecordIds()) {
+        saveRecords();
+      }
+
       const productKeyword = productSearchInput.value.trim().toLowerCase();
       const specKeyword = specSearchInput.value.trim().toLowerCase();
       const storeKeyword = storeSearchInput.value.trim().toLowerCase();
@@ -1227,9 +1365,9 @@
       }
 
       list.innerHTML = groupedRecords.map((group) => {
-        const firstId = group.ids[0];
+          const firstId = group.stores[0].id;
         const safeGroupKey = encodeURIComponent(group.groupKey);
-        const safeIds = group.ids.map((id) => escapeHtml(id)).join(",");
+          const safeIds = group.stores.map((store) => escapeHtml(store.id)).join(",");
         const productName = escapeHtml(group.productName);
         const productTitle = [group.productName, group.spec, group.volume]
           .filter((text) => text !== "")
@@ -1242,14 +1380,14 @@
         const salePrices = group.stores.map((store) => store.salePrice).filter(Number.isFinite);
         const lowestNormalPrice = normalPrices.length > 0 ? Math.min(...normalPrices) : 0;
         const lowestSalePrice = salePrices.length > 0 ? Math.min(...salePrices) : null;
-        const lowestNormalStore = group.stores.find((store) => store.normalPrice === lowestNormalPrice);
-        const lowestSaleStore = lowestSalePrice === null ? null : group.stores.find((store) => store.salePrice === lowestSalePrice);
-        const lowestNormalStoreName = escapeHtml(lowestNormalStore?.storeName || "-");
-        const lowestSaleStoreName = escapeHtml(lowestSaleStore?.storeName || "-");
-        const normalDateText = escapeHtml(formatDaysAgo(lowestNormalStore?.normalPriceDate || ""));
-        const saleDateText = escapeHtml(formatDaysAgo(lowestSaleStore?.salePriceDate || ""));
-        const normalDateClass = getDateClass(lowestNormalStore?.normalPriceDate || "");
-        const saleDateClass = getDateClass(lowestSaleStore?.salePriceDate || "");
+        const lowestNormalStores = group.stores.filter((store) => store.normalPrice === lowestNormalPrice);
+        const lowestSaleStores = lowestSalePrice === null ? [] : group.stores.filter((store) => store.salePrice === lowestSalePrice);
+        const lowestNormalStoreNames = escapeHtml(lowestNormalStores.map((store) => store.storeName).join("、"));
+        const lowestSaleStoreNames = escapeHtml(lowestSaleStores.map((store) => store.storeName).join("、"));
+        const normalDateText = escapeHtml(formatDaysAgo(lowestNormalStores[0]?.normalPriceDate || ""));
+        const saleDateText = escapeHtml(formatDaysAgo(lowestSaleStores[0]?.salePriceDate || ""));
+        const normalDateClass = getDateClass(lowestNormalStores[0]?.normalPriceDate || "");
+        const saleDateClass = getDateClass(lowestSaleStores[0]?.salePriceDate || "");
         const storeCount = group.stores.length;
         const capacityPerYen = escapeHtml(formatCapacityPerYen(group.volume, lowestNormalPrice));
         const allSelected = group.ids.every((id) => selectedIds.has(id));
@@ -1258,7 +1396,7 @@
         const expandedClass = isExpanded ? " is-expanded" : "";
         const salePriceHtml = lowestSalePrice === null ? "" : `
           <div>
-            <div class="price-line">セール最安 ${formatYen(lowestSalePrice)}（${lowestSaleStoreName}）</div>
+            <div class="price-line">セール最安 ${formatYen(lowestSalePrice)}（${lowestSaleStoreNames}）</div>
             <div class="price-date${saleDateClass}">${saleDateText}</div>
           </div>
         `;
@@ -1284,7 +1422,7 @@
               <span class="category-badge">${category}</span>
               <div class="price-block">
                 <div>
-                  <div class="price-line">通常最安 ${lowestNormalPrice > 0 ? formatYen(lowestNormalPrice) : "-"}（${lowestNormalStoreName}）</div>
+                  <div class="price-line">通常最安 ${lowestNormalPrice > 0 ? formatYen(lowestNormalPrice) : "-"}（${lowestNormalStoreNames}）</div>
                   <div class="price-date${normalDateClass}">${normalDateText}</div>
                 </div>
                 ${salePriceHtml}
@@ -1322,11 +1460,11 @@
         category: categoryInput.value,
         spec: specInput.value.trim(),
         storeName: storeNameInput.value.trim(),
-        normalPrice: Number(normalPriceInput.value),
+        normalPrice: normalizePrice(normalPriceInput.value),
         normalPriceDate: normalPriceDateInput.value,
-        salePrice: useSalePriceInput.checked && salePriceInput.value !== "" ? Number(salePriceInput.value) : "",
+        salePrice: useSalePriceInput.checked && salePriceInput.value !== "" ? normalizePrice(salePriceInput.value) : "",
         salePriceDate: useSalePriceInput.checked ? salePriceDateInput.value : "",
-        volume: volumeInput.value.trim(),
+        volume: normalizeVolume(volumeInput.value),
         createdAt,
         updatedAt: createdAt,
         createdBy: localUserId,
@@ -1351,7 +1489,10 @@
     storeSearchInput.addEventListener("input", renderRecords);
     volumeSearchInput.addEventListener("input", renderRecords);
     categoryFilter.addEventListener("change", renderRecords);
+    openSearchButton.addEventListener("click", () => openSectionAndScroll(searchSection));
+    openFormButton.addEventListener("click", () => openSectionAndScroll(registerSection));
     useSalePriceInput.addEventListener("change", updateSaleFields);
+    editUseSalePriceInput.addEventListener("change", updateEditSaleFields);
 
     list.addEventListener("click", (event) => {
       if (event.target.closest(".store-row")) {
@@ -1443,19 +1584,17 @@
       record.category = editCategoryInput.value;
       record.productName = editProductNameInput.value.trim();
       record.spec = editSpecInput.value.trim();
-      record.volume = editVolumeInput.value.trim();
+      record.volume = normalizeVolume(editVolumeInput.value);
       record.storeName = editStoreNameInput.value.trim();
-      record.normalPrice = Number(editNormalPriceInput.value);
+      record.normalPrice = normalizePrice(editNormalPriceInput.value);
       record.normalPriceDate = editNormalPriceDateInput.value;
-      record.salePrice = editSalePriceInput.value === "" ? "" : Number(editSalePriceInput.value);
-      record.salePriceDate = editSalePriceDateInput.value;
+      record.salePrice = editUseSalePriceInput.checked && editSalePriceInput.value !== "" ? normalizePrice(editSalePriceInput.value) : "";
+      record.salePriceDate = editUseSalePriceInput.checked ? editSalePriceDateInput.value : "";
       record.id = record.id || createId();
       record.createdAt = record.createdAt || getNowISO();
       record.updatedAt = getNowISO();
       record.createdBy = record.createdBy || localUserId;
       record.updatedBy = localUserId;
-      delete record.price;
-      delete record.date;
 
       saveRecords();
       renderDatalist();
