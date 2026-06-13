@@ -243,32 +243,6 @@
       font-size: 14px;
     }
 
-    .bulk-actions {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-      align-items: center;
-      margin-top: 12px;
-    }
-
-    .selected-count {
-      color: #475569;
-      font-size: 14px;
-    }
-
-    .bulk-delete-button {
-      min-height: 44px;
-      padding: 0 14px;
-      background: #dc2626;
-    }
-
-    .bulk-delete-button:disabled {
-      background: #cbd5e1;
-      color: #64748b;
-      cursor: not-allowed;
-      transform: none;
-    }
-
     .filter-row {
       display: grid;
       grid-template-columns: 1fr;
@@ -291,14 +265,16 @@
     }
 
     .item-top {
-      display: grid;
-      grid-template-columns: auto 1fr auto;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
       gap: 8px 10px;
     }
 
-    .select-record {
-      align-self: start;
-      padding-top: 2px;
+    .item-actions {
+      display: flex;
+      gap: 6px;
+      order: -1;
     }
 
     .product-name {
@@ -306,13 +282,21 @@
       font-size: 18px;
       font-weight: 800;
       overflow-wrap: anywhere;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .item-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      min-width: fit-content;
     }
 
     .category-badge {
       display: inline-flex;
       align-items: center;
-      justify-self: start;
-      grid-column: 2;
       min-height: 28px;
       padding: 4px 10px;
       border-radius: 999px;
@@ -320,6 +304,52 @@
       color: #047857;
       font-size: 13px;
       font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .store-add-button {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .store-add-button:active {
+      transform: translateY(1px);
+    }
+
+    .product-delete-button {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid #fecaca;
+      border-radius: 999px;
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .product-delete-button:active {
+      transform: translateY(1px);
+    }
+
+    .readonly-field,
+    .readonly-select {
+      background: #f8fafc;
+      color: #334155;
+      cursor: default;
+    }
+
+    .readonly-select {
+      pointer-events: none;
     }
 
     .price {
@@ -333,8 +363,6 @@
     }
 
     .price-block {
-      grid-row: 1 / 3;
-      grid-column: 3;
       display: grid;
       gap: 6px;
       align-self: start;
@@ -394,7 +422,7 @@
 
     .store-row {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr auto auto;
       gap: 6px 10px;
       align-items: center;
       min-height: 44px;
@@ -409,9 +437,30 @@
       text-align: left;
     }
 
+    .store-row:focus-visible {
+      outline: 3px solid rgba(37, 99, 235, 0.4);
+      outline-offset: 2px;
+    }
+
     .store-price {
       color: #0f766e;
       font-weight: 800;
+    }
+
+    .store-delete-button {
+      min-height: 34px;
+      padding: 0 10px;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      background: #fee2e2;
+      color: #b91c1c;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .store-delete-button:active {
+      transform: translateY(1px);
     }
 
     .delete-button {
@@ -472,9 +521,29 @@
 
     .edit-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
       margin-top: 14px;
+    }
+
+    .edit-actions button {
+      width: 100%;
+      min-height: 56px;
+    }
+
+    .detail-delete-button {
+      border: 0;
+      border-radius: 8px;
+      background: #dc2626;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .detail-delete-button:active {
+      transform: translateY(1px);
     }
 
     .cancel-button {
@@ -522,10 +591,6 @@
         gap: 2px;
       }
 
-      .bulk-actions {
-        grid-template-columns: 1fr;
-      }
-
       .detail-panel {
         padding-left: 10px;
         padding-right: 10px;
@@ -533,6 +598,20 @@
 
       .edit-actions {
         grid-template-columns: 1fr;
+      }
+
+      .item-top {
+        flex-direction: column;
+      }
+
+      .item-actions {
+        width: 100%;
+        order: -1;
+      }
+
+      .item-controls {
+        width: 100%;
+        align-items: flex-start;
       }
 
     }
@@ -695,10 +774,6 @@
             <span id="filterText">すべてのカテゴリ</span>
           </div>
 
-          <div class="bulk-actions">
-            <span class="selected-count" id="selectedCountText">0件選択中</span>
-            <button class="bulk-delete-button" id="bulkDeleteButton" type="button" disabled>選択した記録を削除</button>
-          </div>
 
           <div id="list" class="list"></div>
         </div>
@@ -712,11 +787,11 @@
 
         <div class="accordion-content" id="form-section-content">
           <form id="priceForm" novalidate>
-            <div class="form-grid">
-              <label>
-                カテゴリ
-                <select id="category" required></select>
-              </label>
+        <div class="form-grid">
+          <label>
+            カテゴリ
+            <select id="category" required></select>
+          </label>
 
               <label class="full">
                 商品名
@@ -774,6 +849,7 @@
             </div>
 
             <button type="submit">登録する</button>
+            <button type="button" class="cancel-button" id="storeAddCancelButton" hidden>キャンセル</button>
           </form>
         </div>
       </section>
@@ -852,6 +928,7 @@
 
         <div class="edit-actions">
           <button type="submit">保存する</button>
+          <button class="detail-delete-button" id="detailDeleteButton" type="button">削除</button>
           <button class="cancel-button" id="cancelEditButton" type="button">閉じる</button>
         </div>
       </form>
@@ -888,8 +965,6 @@
     const list = document.getElementById("list");
     const countText = document.getElementById("countText");
     const filterText = document.getElementById("filterText");
-    const selectedCountText = document.getElementById("selectedCountText");
-    const bulkDeleteButton = document.getElementById("bulkDeleteButton");
     const detailPanel = document.getElementById("detailPanel");
     const editForm = document.getElementById("editForm");
     const editIdInput = document.getElementById("editId");
@@ -905,7 +980,10 @@
     const editSalePriceInput = document.getElementById("editSalePrice");
     const editSalePriceDateInput = document.getElementById("editSalePriceDate");
     const closeDetailButton = document.getElementById("closeDetailButton");
+    const detailDeleteButton = document.getElementById("detailDeleteButton");
     const cancelEditButton = document.getElementById("cancelEditButton");
+    const storeAddCancelButton = document.getElementById("storeAddCancelButton");
+    const formTitle = document.getElementById("form-title");
     const productNameOptions = document.getElementById("productNameOptions");
     const storeNameOptions = document.getElementById("storeNameOptions");
     const specOptions = document.getElementById("specOptions");
@@ -916,8 +994,13 @@
     const defaultCategories = ["洗濯", "トイレ", "お風呂", "オーラル", "キッチン", "リビング", "薬"];
     let records = loadRecords();
     const categories = defaultCategories;
-    const selectedIds = new Set();
     const expandedGroups = new Set();
+    let storeAddMode = false;
+    let storeAddGroupKey = null;
+    const categoryField = categoryInput.closest("label");
+    const productNameField = productNameInput.closest("label");
+    const specField = specInput.closest("label");
+    const volumeField = volumeInput.closest("label");
 
     // Accordion: シンプルな開閉制御（モバイルファースト、可読性重視）
     (function initAccordions() {
@@ -1010,6 +1093,147 @@
       }
 
       requestAnimationFrame(refreshOpenAccordions);
+    }
+
+    function enterStoreAddMode(group) {
+      storeAddMode = true;
+      storeAddGroupKey = group.groupKey;
+
+      categoryInput.value = group.category || categories[0];
+      productNameInput.value = group.productName || "";
+      specInput.value = group.spec || "";
+      volumeInput.value = group.volume || "";
+      storeNameInput.value = "";
+      normalPriceInput.value = "";
+      normalPriceDateInput.value = getTodayDateISO();
+      useSalePriceInput.checked = false;
+      salePriceInput.value = "";
+      salePriceDateInput.value = getTodayDateISO();
+      saleFields.classList.remove("is-open");
+
+      categoryInput.classList.add("readonly-select");
+      categoryInput.setAttribute("aria-readonly", "true");
+      categoryInput.tabIndex = -1;
+      productNameInput.readOnly = true;
+      productNameInput.classList.add("readonly-field");
+      productNameInput.tabIndex = -1;
+      specInput.readOnly = true;
+      specInput.classList.add("readonly-field");
+      specInput.tabIndex = -1;
+      volumeInput.readOnly = true;
+      volumeInput.classList.add("readonly-field");
+      volumeInput.tabIndex = -1;
+
+      form.querySelector("button[type='submit']").textContent = "保存する";
+      storeAddCancelButton.hidden = false;
+      formTitle.textContent = "店舗追加";
+      openSectionAndScroll(registerSection);
+      storeNameInput.focus();
+    }
+
+    function exitStoreAddMode() {
+      storeAddMode = false;
+      storeAddGroupKey = null;
+
+      categoryInput.classList.remove("readonly-select");
+      categoryInput.removeAttribute("aria-readonly");
+      categoryInput.tabIndex = 0;
+      productNameInput.readOnly = false;
+      productNameInput.classList.remove("readonly-field");
+      productNameInput.tabIndex = 0;
+      specInput.readOnly = false;
+      specInput.classList.remove("readonly-field");
+      specInput.tabIndex = 0;
+      volumeInput.readOnly = false;
+      volumeInput.classList.remove("readonly-field");
+      volumeInput.tabIndex = 0;
+
+      form.querySelector("button[type='submit']").textContent = "登録する";
+      storeAddCancelButton.hidden = true;
+      formTitle.textContent = "新規登録";
+    }
+
+    function normalizeText(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function findGroupByKey(groupKey) {
+      return records.filter((record) => getRecordGroupKey(record) === groupKey);
+    }
+
+    function updateExistingStoreRecord(existingRecord) {
+      existingRecord.storeName = storeNameInput.value.trim();
+      existingRecord.normalPrice = normalizePrice(normalPriceInput.value);
+      existingRecord.normalPriceDate = normalPriceDateInput.value;
+      existingRecord.salePrice = useSalePriceInput.checked && salePriceInput.value !== "" ? normalizePrice(salePriceInput.value) : "";
+      existingRecord.salePriceDate = useSalePriceInput.checked ? salePriceDateInput.value : "";
+      existingRecord.updatedAt = getNowISO();
+      existingRecord.updatedBy = localUserId;
+    }
+
+    function addStoreToGroup() {
+      const group = findGroupByKey(storeAddGroupKey);
+      if (group.length === 0) {
+        return;
+      }
+
+      const storeNameValue = storeNameInput.value.trim();
+      const existingRecord = group.find((record) => normalizeText(record.storeName) === normalizeText(storeNameValue));
+
+      if (existingRecord) {
+        const confirmed = window.confirm(`この店舗は既に登録されています。新規追加ではなく上書きしますか？`);
+        if (!confirmed) {
+          return false;
+        }
+
+        updateExistingStoreRecord(existingRecord);
+        return true;
+      }
+
+      const createdAt = getNowISO();
+      const newRecord = {
+        id: createId(),
+        productName: productNameInput.value.trim(),
+        category: categoryInput.value,
+        spec: specInput.value.trim(),
+        storeName: storeNameValue,
+        normalPrice: normalizePrice(normalPriceInput.value),
+        normalPriceDate: normalPriceDateInput.value,
+        salePrice: useSalePriceInput.checked && salePriceInput.value !== "" ? normalizePrice(salePriceInput.value) : "",
+        salePriceDate: useSalePriceInput.checked ? salePriceDateInput.value : "",
+        volume: normalizeVolume(volumeInput.value),
+        createdAt,
+        updatedAt: createdAt,
+        createdBy: localUserId,
+        updatedBy: localUserId
+      };
+
+      records.unshift(newRecord);
+      return true;
+    }
+
+    function prepareNewRecordForm() {
+      exitStoreAddMode();
+      form.reset();
+      normalPriceDateInput.value = getTodayDateISO();
+      updateSaleFields();
+      renderCategories(categoryInput.value, categoryFilter.value);
+      productNameInput.focus();
+    }
+
+    function openStoreAdd(groupKey) {
+      const group = findGroupByKey(groupKey);
+      if (group.length === 0) {
+        return;
+      }
+
+      enterStoreAddMode({
+        groupKey,
+        productName: group[0].productName || "",
+        spec: group[0].spec || "",
+        volume: group[0].volume || "",
+        category: group[0].category || categories[0]
+      });
     }
 
     function updateEditSaleFields() {
@@ -1180,12 +1404,6 @@
       editSaleFields.classList.remove("is-open");
     }
 
-    function updateSelectedControls() {
-      const selectedCount = selectedIds.size;
-      selectedCountText.textContent = `${selectedCount}件選択中`;
-      bulkDeleteButton.disabled = selectedCount === 0;
-    }
-
     function formatYen(number) {
       return Number(number).toLocaleString("ja-JP") + "円";
     }
@@ -1283,6 +1501,32 @@
         .replace(/'/g, "&#039;");
     }
 
+    function getRecordGroupKey(record) {
+      return `${record.productName || ""}\u001f${record.spec || ""}\u001f${record.volume || ""}`;
+    }
+
+    function getProductTitle(productName, spec, volume) {
+      return [productName, spec, volume]
+        .filter((text) => text !== "")
+        .join(" /");
+    }
+
+    function deleteProductGroup(groupKey) {
+      records = records.filter((record) => getRecordGroupKey(record) !== groupKey);
+      expandedGroups.delete(groupKey);
+    }
+
+    function deleteStoreRecord(recordId) {
+      const record = records.find((item) => item.id === recordId);
+      if (!record) {
+        return null;
+      }
+
+      const groupKey = getRecordGroupKey(record);
+      records = records.filter((item) => item.id !== recordId);
+      return groupKey;
+    }
+
     function groupRecords(targetRecords) {
       // 商品名・仕様・容量が同じ記録を、1つの商品グループとしてまとめます
       const groups = new Map();
@@ -1356,7 +1600,6 @@
 
       countText.textContent = `${groupedRecords.length}商品 / ${filteredRecords.length}件`;
       filterText.textContent = selectedCategory === "すべて" ? "すべてのカテゴリ" : selectedCategory;
-      updateSelectedControls();
 
       if (groupedRecords.length === 0) {
         list.innerHTML = '<p class="empty">記録がありません</p>';
@@ -1367,7 +1610,6 @@
       list.innerHTML = groupedRecords.map((group) => {
           const firstId = group.stores[0].id;
         const safeGroupKey = encodeURIComponent(group.groupKey);
-          const safeIds = group.stores.map((store) => escapeHtml(store.id)).join(",");
         const productName = escapeHtml(group.productName);
         const productTitle = [group.productName, group.spec, group.volume]
           .filter((text) => text !== "")
@@ -1390,8 +1632,6 @@
         const saleDateClass = getDateClass(lowestSaleStores[0]?.salePriceDate || "");
         const storeCount = group.stores.length;
         const capacityPerYen = escapeHtml(formatCapacityPerYen(group.volume, lowestNormalPrice));
-        const allSelected = group.ids.every((id) => selectedIds.has(id));
-        const checked = allSelected ? "checked" : "";
         const isExpanded = expandedGroups.has(group.groupKey);
         const expandedClass = isExpanded ? " is-expanded" : "";
         const salePriceHtml = lowestSalePrice === null ? "" : `
@@ -1407,25 +1647,31 @@
           const saleDate = Number.isFinite(store.salePrice) ? ` / ${escapeHtml(formatDaysAgo(store.salePriceDate || ""))}` : "";
 
           return `
-            <button class="store-row" type="button" data-id="${store.id}">
+            <div class="store-row" role="button" tabindex="0" data-id="${store.id}" data-store-name="${escapeHtml(store.storeName || "")}" data-group-key="${safeGroupKey}">
               <span>${storeName} / ${normalDate}${saleDate}</span>
               <span class="store-price">通常 ${formatYen(store.normalPrice)}${salePrice}</span>
-            </button>
+              <button class="store-delete-button" type="button" data-id="${store.id}" aria-label="${productName} の ${storeName} を削除">削除</button>
+            </div>
           `;
         }).join("");
 
         return `
-          <article class="item${expandedClass}" data-id="${firstId}" data-ids="${safeIds}" data-group-key="${safeGroupKey}" aria-expanded="${isExpanded}" tabindex="0">
+          <article class="item${expandedClass}" data-id="${firstId}" data-group-key="${safeGroupKey}" aria-expanded="${isExpanded}" tabindex="0">
             <div class="item-top">
-              <input class="select-record" type="checkbox" data-ids="${safeIds}" aria-label="${productName}を選択" ${checked}>
+              <div class="item-actions">
+                <button class="store-add-button" type="button" data-group-key="${safeGroupKey}" aria-label="${productName} に店舗を追加">店舗追加</button>
+                <button class="product-delete-button" type="button" data-group-key="${safeGroupKey}" aria-label="${productName} の商品を削除">商品削除</button>
+              </div>
               <p class="product-name">${productTitle}</p>
-              <span class="category-badge">${category}</span>
-              <div class="price-block">
-                <div>
-                  <div class="price-line">通常最安 ${lowestNormalPrice > 0 ? formatYen(lowestNormalPrice) : "-"}（${lowestNormalStoreNames}）</div>
-                  <div class="price-date${normalDateClass}">${normalDateText}</div>
+              <div class="item-controls">
+                <span class="category-badge">${category}</span>
+                <div class="price-block">
+                  <div>
+                    <div class="price-line">通常最安 ${lowestNormalPrice > 0 ? formatYen(lowestNormalPrice) : "-"}（${lowestNormalStoreNames}）</div>
+                    <div class="price-date${normalDateClass}">${normalDateText}</div>
+                  </div>
+                  ${salePriceHtml}
                 </div>
-                ${salePriceHtml}
               </div>
             </div>
 
@@ -1437,8 +1683,6 @@
             </div>
 
             <div class="store-list">${storeRows}</div>
-
-            <button class="delete-button" type="button" data-ids="${safeIds}">削除</button>
           </article>
         `;
       }).join("");
@@ -1450,6 +1694,26 @@
       event.preventDefault();
 
       if (!form.reportValidity()) {
+        return;
+      }
+
+      if (storeAddMode) {
+        const saved = addStoreToGroup();
+        if (!saved) {
+          return;
+        }
+
+        saveRecords();
+        renderDatalist();
+        renderRecords();
+        storeNameInput.value = "";
+        normalPriceInput.value = "";
+        normalPriceDateInput.value = getTodayDateISO();
+        useSalePriceInput.checked = false;
+        salePriceInput.value = "";
+        salePriceDateInput.value = "";
+        saleFields.classList.remove("is-open");
+        storeNameInput.focus();
         return;
       }
 
@@ -1490,39 +1754,78 @@
     volumeSearchInput.addEventListener("input", renderRecords);
     categoryFilter.addEventListener("change", renderRecords);
     openSearchButton.addEventListener("click", () => openSectionAndScroll(searchSection));
-    openFormButton.addEventListener("click", () => openSectionAndScroll(registerSection));
+    openFormButton.addEventListener("click", () => {
+      prepareNewRecordForm();
+      openSectionAndScroll(registerSection);
+    });
+    storeAddCancelButton.addEventListener("click", () => {
+      prepareNewRecordForm();
+    });
     useSalePriceInput.addEventListener("change", updateSaleFields);
     editUseSalePriceInput.addEventListener("change", updateEditSaleFields);
 
     list.addEventListener("click", (event) => {
-      if (event.target.closest(".store-row")) {
-        openDetail(event.target.closest(".store-row").dataset.id);
-        return;
-      }
+      if (event.target.matches(".store-delete-button")) {
+        const recordId = event.target.dataset.id;
+        const record = records.find((item) => item.id === recordId);
 
-      // 削除ボタンが押された時だけ、対象の記録を消します
-      if (event.target.matches(".delete-button")) {
-        const ids = event.target.dataset.ids.split(",");
-        ids.forEach((id) => selectedIds.delete(id));
-        records = records.filter((record) => !ids.includes(record.id));
+        if (!record) {
+          return;
+        }
+
+        const productTitle = getProductTitle(record.productName, record.spec, record.volume);
+        const storeName = record.storeName || "-";
+        const confirmed = window.confirm(`店舗データを削除しますか？\n\n商品：\n${productTitle}\n\n店舗：\n${storeName}\n\n元に戻せません。`);
+
+        if (!confirmed) {
+          return;
+        }
+
+        const groupKey = deleteStoreRecord(recordId);
+        if (groupKey) {
+          const remainingGroupRecords = records.filter((item) => getRecordGroupKey(item) === groupKey);
+          if (remainingGroupRecords.length === 0) {
+            expandedGroups.delete(groupKey);
+          }
+        }
+
         saveRecords();
         renderDatalist();
         renderRecords();
         return;
       }
 
-      if (event.target.matches(".select-record")) {
-        const ids = event.target.dataset.ids.split(",");
-
-        if (event.target.checked) {
-          ids.forEach((id) => selectedIds.add(id));
-        } else {
-          ids.forEach((id) => selectedIds.delete(id));
-        }
-
-        updateSelectedControls();
+      if (event.target.matches(".store-add-button")) {
+        openStoreAdd(decodeURIComponent(event.target.dataset.groupKey));
         return;
       }
+
+      if (event.target.matches(".product-delete-button")) {
+        const groupKey = decodeURIComponent(event.target.dataset.groupKey);
+        const group = records.filter((record) => getRecordGroupKey(record) === groupKey);
+        if (group.length === 0) {
+          return;
+        }
+
+        const productTitle = getProductTitle(group[0].productName, group[0].spec, group[0].volume);
+        const confirmed = window.confirm(`この商品を削除しますか？\n\n商品：\n${productTitle}\n\n削除対象：\n店舗データ ${group.length}件\n\n元に戻せません。`);
+
+        if (!confirmed) {
+          return;
+        }
+
+        deleteProductGroup(groupKey);
+        saveRecords();
+        renderDatalist();
+        renderRecords();
+        return;
+      }
+
+      if (event.target.closest(".store-row") && !event.target.matches(".store-delete-button")) {
+        openDetail(event.target.closest(".store-row").dataset.id);
+        return;
+      }
+
 
       const item = event.target.closest(".item");
 
@@ -1547,7 +1850,7 @@
         return;
       }
 
-      if (event.target.matches(".select-record") || event.key !== "Enter") {
+      if (event.key !== "Enter") {
         return;
       }
 
@@ -1603,6 +1906,36 @@
     });
 
     closeDetailButton.addEventListener("click", closeDetail);
+    detailDeleteButton.addEventListener("click", () => {
+      const recordId = editIdInput.value;
+      const record = records.find((item) => item.id === recordId);
+
+      if (!record) {
+        closeDetail();
+        return;
+      }
+
+      const productTitle = getProductTitle(record.productName, record.spec, record.volume);
+      const storeName = record.storeName || "-";
+      const confirmed = window.confirm(`店舗データを削除しますか？\n\n商品：\n${productTitle}\n\n店舗：\n${storeName}\n\n元に戻せません。`);
+
+      if (!confirmed) {
+        return;
+      }
+
+      const groupKey = deleteStoreRecord(recordId);
+      if (groupKey) {
+        const remainingGroupRecords = records.filter((item) => getRecordGroupKey(item) === groupKey);
+        if (remainingGroupRecords.length === 0) {
+          expandedGroups.delete(groupKey);
+        }
+      }
+
+      saveRecords();
+      renderDatalist();
+      renderRecords();
+      closeDetail();
+    });
     cancelEditButton.addEventListener("click", closeDetail);
 
     detailPanel.addEventListener("click", (event) => {
@@ -1611,21 +1944,8 @@
       }
     });
 
-    bulkDeleteButton.addEventListener("click", () => {
-      if (selectedIds.size === 0) {
-        return;
-      }
-
-      records = records.filter((record) => !selectedIds.has(record.id));
-      selectedIds.clear();
-      saveRecords();
-      renderDatalist();
-      renderRecords();
-    });
-
     renderCategories();
     renderDatalist();
-    updateSelectedControls();
     renderRecords();
   </script>
 </body>
