@@ -324,6 +324,23 @@
       transform: translateY(1px);
     }
 
+    .stock-edit-button {
+      min-height: 36px;
+      padding: 0 12px;
+      border: 1px solid #a7f3d0;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #047857;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .stock-edit-button:active {
+      transform: translateY(1px);
+    }
+
     .product-delete-button {
       min-height: 36px;
       padding: 0 12px;
@@ -380,14 +397,7 @@
       color: #0f766e;
       font-size: 18px;
       font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .price-date {
-      color: #64748b;
-      font-size: 13px;
-      font-weight: 700;
-      white-space: nowrap;
+      overflow-wrap: anywhere;
     }
 
     .old-price {
@@ -403,16 +413,6 @@
       font-size: 14px;
     }
 
-    .capacity-per-yen {
-      grid-column: 1 / -1;
-      margin-top: 4px;
-      padding: 10px 12px;
-      border-radius: 8px;
-      background: #eff6ff;
-      color: #1d4ed8;
-      font-weight: 800;
-    }
-
     .store-list {
       display: grid;
       gap: 6px;
@@ -422,13 +422,13 @@
     }
 
     .item.is-expanded .store-list {
-      max-height: 520px;
+      max-height: 900px;
       margin-top: 10px;
     }
 
     .store-row {
       display: grid;
-      grid-template-columns: 1fr auto auto;
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 6px 10px;
       align-items: center;
       min-height: 44px;
@@ -443,6 +443,17 @@
       text-align: left;
     }
 
+    .store-info {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .store-name {
+      color: #334155;
+      font-weight: 800;
+    }
+
     .store-row:focus-visible {
       outline: 3px solid rgba(37, 99, 235, 0.4);
       outline-offset: 2px;
@@ -451,6 +462,26 @@
     .store-price {
       color: #0f766e;
       font-weight: 800;
+    }
+
+    .store-price-line {
+      color: #0f766e;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    .price-store-names {
+      color: #475569;
+      font-size: 13px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .stock-line {
+      color: #1d4ed8;
+      font-size: 14px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
     }
 
     .store-delete-button {
@@ -815,6 +846,16 @@
               </label>
 
               <label>
+                在庫数
+                <input id="stockCount" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="例: 2">
+              </label>
+
+              <label>
+                在庫数登録日
+                <input id="stockDate" type="date">
+              </label>
+
+              <label>
                 店舗
                 <input id="storeName" type="text" list="storeNameOptions" autocomplete="organization" placeholder="例: 近所のスーパー" required>
               </label>
@@ -941,6 +982,36 @@
     </div>
   </div>
 
+  <div class="detail-panel" id="stockPanel" aria-hidden="true">
+    <div class="detail-box" role="dialog" aria-modal="true" aria-labelledby="stock-title">
+      <div class="detail-head">
+        <h2 id="stock-title">在庫変更</h2>
+        <button class="close-button" id="closeStockButton" type="button" aria-label="閉じる">×</button>
+      </div>
+
+      <form id="stockForm" novalidate>
+        <input id="stockGroupKey" type="hidden">
+
+        <div class="form-grid">
+          <label>
+            在庫数
+            <input id="stockModalCountInput" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="例: 2">
+          </label>
+
+          <label>
+            在庫登録日
+            <input id="stockModalDateInput" type="date">
+          </label>
+        </div>
+
+        <div class="edit-actions">
+          <button type="submit">保存</button>
+          <button class="cancel-button" id="cancelStockButton" type="button">キャンセル</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <datalist id="productNameOptions"></datalist>
   <datalist id="storeNameOptions"></datalist>
   <datalist id="specOptions"></datalist>
@@ -963,6 +1034,8 @@
     const salePriceInput = document.getElementById("salePrice");
     const salePriceDateInput = document.getElementById("salePriceDate");
     const volumeInput = document.getElementById("volume");
+    const stockCountInput = document.getElementById("stockCount");
+    const stockDateInput = document.getElementById("stockDate");
     const productSearchInput = document.getElementById("productSearchInput");
     const specSearchInput = document.getElementById("specSearchInput");
     const storeSearchInput = document.getElementById("storeSearchInput");
@@ -972,6 +1045,13 @@
     const countText = document.getElementById("countText");
     const filterText = document.getElementById("filterText");
     const detailPanel = document.getElementById("detailPanel");
+    const stockPanel = document.getElementById("stockPanel");
+    const stockForm = document.getElementById("stockForm");
+    const stockGroupKeyInput = document.getElementById("stockGroupKey");
+    const stockModalCountInput = document.getElementById("stockModalCountInput");
+    const stockModalDateInput = document.getElementById("stockModalDateInput");
+    const closeStockButton = document.getElementById("closeStockButton");
+    const cancelStockButton = document.getElementById("cancelStockButton");
     const editForm = document.getElementById("editForm");
     const editIdInput = document.getElementById("editId");
     const editCategoryInput = document.getElementById("editCategory");
@@ -1067,7 +1147,7 @@
       });
     }
 
-    function openSectionAndScroll(section) {
+    function openSectionAndScroll(section, targetElement = null) {
       const header = section.querySelector(".accordion-header");
       const content = section.querySelector(".accordion-content");
 
@@ -1081,7 +1161,14 @@
 
       window.setTimeout(() => {
         content.style.maxHeight = "none";
-        section.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        if (targetElement) {
+          const topOffset = 110;
+          const elementTop = targetElement.getBoundingClientRect().top + window.scrollY - topOffset;
+          window.scrollTo({ top: Math.max(0, elementTop), behavior: "smooth" });
+        } else {
+          section.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
       }, 120);
     }
 
@@ -1109,6 +1196,8 @@
       productNameInput.value = group.productName || "";
       specInput.value = group.spec || "";
       volumeInput.value = group.volume || "";
+      stockCountInput.value = group.stockCount ?? "";
+      stockDateInput.value = group.stockDate || getTodayDateISO();
       storeNameInput.value = "";
       normalPriceInput.value = "";
       normalPriceDateInput.value = getTodayDateISO();
@@ -1128,11 +1217,17 @@
       volumeInput.readOnly = true;
       volumeInput.classList.add("readonly-field");
       volumeInput.tabIndex = -1;
+      stockCountInput.readOnly = true;
+      stockCountInput.classList.add("readonly-field");
+      stockCountInput.tabIndex = -1;
+      stockDateInput.readOnly = true;
+      stockDateInput.classList.add("readonly-field");
+      stockDateInput.tabIndex = -1;
 
       form.querySelector("button[type='submit']").textContent = "保存する";
       storeAddCancelButton.hidden = false;
       formTitle.textContent = "店舗追加";
-      openSectionAndScroll(registerSection);
+      openSectionAndScroll(registerSection, storeNameInput);
       storeNameInput.focus();
     }
 
@@ -1151,6 +1246,12 @@
       volumeInput.readOnly = false;
       volumeInput.classList.remove("readonly-field");
       volumeInput.tabIndex = 0;
+      stockCountInput.readOnly = false;
+      stockCountInput.classList.remove("readonly-field");
+      stockCountInput.tabIndex = 0;
+      stockDateInput.readOnly = false;
+      stockDateInput.classList.remove("readonly-field");
+      stockDateInput.tabIndex = 0;
 
       form.querySelector("button[type='submit']").textContent = "登録する";
       storeAddCancelButton.hidden = true;
@@ -1206,6 +1307,8 @@
         salePrice: useSalePriceInput.checked && salePriceInput.value !== "" ? normalizePrice(salePriceInput.value) : "",
         salePriceDate: useSalePriceInput.checked ? salePriceDateInput.value : "",
         volume: normalizeVolume(volumeInput.value),
+        stockCount: group[0].stockCount ?? "",
+        stockDate: group[0].stockDate || "",
         createdAt,
         updatedAt: createdAt,
         createdBy: localUserId,
@@ -1220,6 +1323,7 @@
       exitStoreAddMode();
       form.reset();
       normalPriceDateInput.value = getTodayDateISO();
+      stockDateInput.value = getTodayDateISO();
       updateSaleFields();
       renderCategories(categoryInput.value, categoryFilter.value);
       productNameInput.focus();
@@ -1236,6 +1340,8 @@
         productName: group[0].productName || "",
         spec: group[0].spec || "",
         volume: group[0].volume || "",
+        stockCount: group[0].stockCount ?? "",
+        stockDate: group[0].stockDate || "",
         category: group[0].category || categories[0]
       });
     }
@@ -1256,6 +1362,7 @@
 
     // 通常価格の確認日は、新規登録時に今日の日付をセットします
     normalPriceDateInput.value = getTodayDateISO();
+    stockDateInput.value = getTodayDateISO();
     updateSaleFields();
 
     function ensureUniqueRecordIds() {
@@ -1396,9 +1503,34 @@
       editSalePriceInput.value = record.salePrice || "";
       editSalePriceDateInput.value = record.salePriceDate || "";
       editSaleFields.classList.toggle("is-open", editUseSalePriceInput.checked);
+
+      // 商品名・仕様・容量を読み取り専用に
+      editProductNameInput.readOnly = true;
+      editProductNameInput.classList.add("readonly-field");
+      editProductNameInput.tabIndex = -1;
+      editSpecInput.readOnly = true;
+      editSpecInput.classList.add("readonly-field");
+      editSpecInput.tabIndex = -1;
+      editVolumeInput.readOnly = true;
+      editVolumeInput.classList.add("readonly-field");
+      editVolumeInput.tabIndex = -1;
+
       detailPanel.classList.add("is-open");
       detailPanel.setAttribute("aria-hidden", "false");
-      editProductNameInput.focus();
+
+      const detailBox = detailPanel.querySelector(".detail-box");
+      detailBox.scrollTop = 0;
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const panelRect = detailPanel.getBoundingClientRect();
+          const inputRect = editStoreNameInput.getBoundingClientRect();
+          const offset = inputRect.top - panelRect.top - 24;
+
+          detailBox.scrollTop = Math.max(0, offset);
+          editStoreNameInput.focus();
+        });
+      });
     }
 
     function closeDetail() {
@@ -1406,6 +1538,18 @@
       detailPanel.setAttribute("aria-hidden", "true");
       editForm.reset();
       editSaleFields.classList.remove("is-open");
+      detailPanel.querySelector(".detail-box").scrollTop = 0;
+
+      // 商品名・仕様・容量を編集可能に戻す
+      editProductNameInput.readOnly = false;
+      editProductNameInput.classList.remove("readonly-field");
+      editProductNameInput.tabIndex = 0;
+      editSpecInput.readOnly = false;
+      editSpecInput.classList.remove("readonly-field");
+      editSpecInput.tabIndex = 0;
+      editVolumeInput.readOnly = false;
+      editVolumeInput.classList.remove("readonly-field");
+      editVolumeInput.tabIndex = 0;
     }
 
     function formatYen(number) {
@@ -1447,6 +1591,19 @@
       return daysAgo !== null && daysAgo >= 30 ? " old-price" : "";
     }
 
+    function formatDateSlash(dateText) {
+      if (!dateText) {
+        return "-";
+      }
+
+      const [year, month, day] = String(dateText).split("-");
+      if (!year || !month || !day) {
+        return "-";
+      }
+
+      return `${year}/${month}/${day}`;
+    }
+
     function normalizeVolume(value) {
       // 容量だけ、保存時に全角英数字と全角スペースを半角へそろえます
       return String(value || "")
@@ -1464,18 +1621,81 @@
       return Number(normalizedValue);
     }
 
+    function getStockValues(stockCountField, stockDateField) {
+      return normalizeStockValue(stockCountField.value, stockDateField.value);
+    }
+
+    function normalizeStockValue(value, dateValue) {
+      const stockCountText = String(value || "").trim();
+
+      if (stockCountText === "") {
+        return {
+          stockCount: "",
+          stockDate: ""
+        };
+      }
+
+      return {
+        stockCount: Number(stockCountText),
+        stockDate: dateValue || getTodayDateISO()
+      };
+    }
+
+    function getGroupStockValues(groupKey) {
+      const groupRecords = records.filter((record) => getRecordGroupKey(record) === groupKey);
+      const stockRecord = groupRecords.find((record) => record.stockCount !== "" && record.stockCount !== undefined && record.stockCount !== null) || groupRecords[0] || null;
+
+      return {
+        stockCount: stockRecord?.stockCount ?? "",
+        stockDate: stockRecord?.stockDate || ""
+      };
+    }
+
+    function updateGroupStock(groupKey, stockCount, stockDate) {
+      records.forEach((record) => {
+        if (getRecordGroupKey(record) !== groupKey) {
+          return;
+        }
+
+        record.stockCount = stockCount;
+        record.stockDate = stockDate;
+        record.updatedAt = getNowISO();
+        record.updatedBy = localUserId;
+      });
+    }
+
+    function openStockEditor(groupKey) {
+      const groupRecords = records.filter((record) => getRecordGroupKey(record) === groupKey);
+      if (groupRecords.length === 0) {
+        return;
+      }
+
+      const stockValues = getGroupStockValues(groupKey);
+      stockGroupKeyInput.value = groupKey;
+      stockModalCountInput.value = stockValues.stockCount === "" ? "" : String(stockValues.stockCount);
+      stockModalDateInput.value = stockValues.stockCount === "" ? getTodayDateISO() : stockValues.stockDate || "";
+      stockPanel.classList.add("is-open");
+      stockPanel.setAttribute("aria-hidden", "false");
+      stockModalCountInput.focus();
+    }
+
+    function closeStockEditor() {
+      stockPanel.classList.remove("is-open");
+      stockPanel.setAttribute("aria-hidden", "true");
+      stockForm.reset();
+    }
+
     function formatCapacityPerYen(volume, price) {
-      // 容量は「500ml」「30枚」のような文字から数値と単位を取り出して計算します
+      // 容量は「500ml」「30枚」のような文字から数値だけを取り出して計算します
       const match = String(volume || "").match(/^([0-9]+(?:\.[0-9]+)?)(.*)$/);
       const volumeNumber = match ? Number(match[1]) : NaN;
-      const unit = match ? match[2].trim() : "";
 
       if (!Number.isFinite(volumeNumber) || !Number.isFinite(price) || price <= 0) {
         return "-";
       }
 
       const roundedValue = Math.round((volumeNumber / price) * 100) / 100;
-      return `${roundedValue}${unit}/円`;
+      return `${roundedValue}/円`;
     }
 
     function createId() {
@@ -1531,6 +1751,23 @@
       return groupKey;
     }
 
+    function updateProductAttributesForGroup(groupKey, attributes) {
+      records.forEach((record) => {
+        if (getRecordGroupKey(record) !== groupKey) {
+          return;
+        }
+
+        record.category = attributes.category;
+        record.productName = attributes.productName;
+        record.spec = attributes.spec;
+        record.volume = attributes.volume;
+        record.stockCount = attributes.stockCount;
+        record.stockDate = attributes.stockDate;
+        record.updatedAt = getNowISO();
+        record.updatedBy = localUserId;
+      });
+    }
+
     function groupRecords(targetRecords) {
       // 商品名・仕様・容量が同じ記録を、1つの商品グループとしてまとめます
       const groups = new Map();
@@ -1548,12 +1785,19 @@
             spec,
             volume,
             category: record.category || "キッチン",
+            stockCount: record.stockCount ?? "",
+            stockDate: record.stockDate || "",
             ids: [],
             stores: []
           });
         }
 
         const group = groups.get(groupKey);
+        if (group.stockCount === "" && record.stockCount !== "" && record.stockCount !== undefined && record.stockCount !== null) {
+          group.stockCount = record.stockCount;
+          group.stockDate = record.stockDate || "";
+        }
+
         const normalPrice = Number(record.normalPrice);
         const salePrice = record.salePrice === "" ? NaN : Number(record.salePrice);
         group.ids.push(record.id);
@@ -1630,30 +1874,35 @@
         const lowestSaleStores = lowestSalePrice === null ? [] : group.stores.filter((store) => store.salePrice === lowestSalePrice);
         const lowestNormalStoreNames = escapeHtml(lowestNormalStores.map((store) => store.storeName).join("、"));
         const lowestSaleStoreNames = escapeHtml(lowestSaleStores.map((store) => store.storeName).join("、"));
-        const normalDateText = escapeHtml(formatDaysAgo(lowestNormalStores[0]?.normalPriceDate || ""));
-        const saleDateText = escapeHtml(formatDaysAgo(lowestSaleStores[0]?.salePriceDate || ""));
-        const normalDateClass = getDateClass(lowestNormalStores[0]?.normalPriceDate || "");
-        const saleDateClass = getDateClass(lowestSaleStores[0]?.salePriceDate || "");
         const storeCount = group.stores.length;
-        const capacityPerYen = escapeHtml(formatCapacityPerYen(group.volume, lowestNormalPrice));
+        const lowestNormalCapacityPerYen = escapeHtml(formatCapacityPerYen(group.volume, lowestNormalPrice));
+        const lowestSaleCapacityPerYen = lowestSalePrice === null ? "" : escapeHtml(formatCapacityPerYen(group.volume, lowestSalePrice));
+        const hasStock = group.stockCount !== "" && group.stockCount !== undefined && group.stockCount !== null;
+        const stockDateText = group.stockDate ? `（${escapeHtml(formatDateSlash(group.stockDate))}）` : "";
+        const stockHtml = hasStock ? `<div class="stock-line">在庫：${escapeHtml(group.stockCount)}個${stockDateText}</div>` : "";
         const isExpanded = expandedGroups.has(group.groupKey);
         const expandedClass = isExpanded ? " is-expanded" : "";
         const salePriceHtml = lowestSalePrice === null ? "" : `
           <div>
-            <div class="price-line">セール最安 ${formatYen(lowestSalePrice)}（${lowestSaleStoreNames}）</div>
-            <div class="price-date${saleDateClass}">${saleDateText}</div>
+            <div class="price-line">セール最安 ${formatYen(lowestSalePrice)}（${lowestSaleCapacityPerYen}）</div>
+            <div class="price-store-names">（${lowestSaleStoreNames}）</div>
           </div>
         `;
         const storeRows = group.stores.map((store) => {
           const storeName = escapeHtml(store.storeName || "-");
-          const normalDate = escapeHtml(formatDaysAgo(store.normalPriceDate || ""));
-          const salePrice = Number.isFinite(store.salePrice) ? ` / セール ${formatYen(store.salePrice)}` : "";
-          const saleDate = Number.isFinite(store.salePrice) ? ` / ${escapeHtml(formatDaysAgo(store.salePriceDate || ""))}` : "";
+          const normalDate = escapeHtml(formatDateSlash(store.normalPriceDate || ""));
+          const normalCapacityPerYen = escapeHtml(formatCapacityPerYen(group.volume, store.normalPrice));
+          const salePriceLine = Number.isFinite(store.salePrice) ? `
+                <div class="store-price-line">セール ${formatYen(store.salePrice)}（${escapeHtml(formatCapacityPerYen(group.volume, store.salePrice))}）｜${escapeHtml(formatDateSlash(store.salePriceDate || ""))}</div>
+              ` : "";
 
           return `
             <div class="store-row" role="button" tabindex="0" data-id="${store.id}" data-store-name="${escapeHtml(store.storeName || "")}" data-group-key="${safeGroupKey}">
-              <span>${storeName} / ${normalDate}${saleDate}</span>
-              <span class="store-price">通常 ${formatYen(store.normalPrice)}${salePrice}</span>
+              <div class="store-info">
+                <div class="store-name">${storeName}</div>
+                <div class="store-price-line">通常 ${formatYen(store.normalPrice)}（${normalCapacityPerYen}）｜${normalDate}</div>
+                ${salePriceLine}
+              </div>
               <button class="store-delete-button" type="button" data-id="${store.id}" aria-label="${productName} の ${storeName} を削除">削除</button>
             </div>
           `;
@@ -1664,15 +1913,17 @@
             <div class="item-top">
               <div class="item-actions">
                 <button class="store-add-button" type="button" data-group-key="${safeGroupKey}" aria-label="${productName} に店舗を追加">店舗追加</button>
+                <button class="stock-edit-button" type="button" data-group-key="${safeGroupKey}" aria-label="${productName} の在庫を変更">在庫変更</button>
                 <button class="product-delete-button" type="button" data-group-key="${safeGroupKey}" aria-label="${productName} の商品を削除">商品削除</button>
               </div>
               <p class="product-name">${productTitle}</p>
               <div class="item-controls">
                 <span class="category-badge">${category}</span>
                 <div class="price-block">
+                  ${stockHtml}
                   <div>
-                    <div class="price-line">通常最安 ${lowestNormalPrice > 0 ? formatYen(lowestNormalPrice) : "-"}（${lowestNormalStoreNames}）</div>
-                    <div class="price-date${normalDateClass}">${normalDateText}</div>
+                    <div class="price-line">通常最安 ${lowestNormalPrice > 0 ? formatYen(lowestNormalPrice) : "-"}（${lowestNormalCapacityPerYen}）</div>
+                    <div class="price-store-names">（${lowestNormalStoreNames}）</div>
                   </div>
                   ${salePriceHtml}
                 </div>
@@ -1680,10 +1931,7 @@
             </div>
 
             <div class="meta">
-              <span>仕様: ${spec}</span>
-              <span>容量: ${volume}</span>
               <span>${storeCount}店舗</span>
-              <span class="capacity-per-yen">1円あたりの容量: ${capacityPerYen}</span>
             </div>
 
             <div class="store-list">${storeRows}</div>
@@ -1707,21 +1955,76 @@
           return;
         }
 
+        const addedGroupKey = storeAddGroupKey;
+        saveRecords();
+        renderDatalist();
+        exitStoreAddMode();
+        form.reset();
+        normalPriceDateInput.value = getTodayDateISO();
+        stockDateInput.value = getTodayDateISO();
+        updateSaleFields();
+        if (addedGroupKey) {
+          expandedGroups.add(addedGroupKey);
+        }
+        renderRecords();
+
+        // 追加した商品カードの位置にスクロール
+        const safeGroupKey = encodeURIComponent(addedGroupKey);
+        const addedItem = list.querySelector(`[data-group-key="${safeGroupKey}"]`);
+        if (addedItem) {
+          const topOffset = 110;
+          const elementTop = addedItem.getBoundingClientRect().top + window.scrollY - topOffset;
+          window.scrollTo({ top: Math.max(0, elementTop), behavior: "smooth" });
+        } else {
+          openSectionAndScroll(searchSection);
+        }
+        return;
+      }
+
+      // 新規登録時に同じ商品・仕様・容量・店舗が既に登録されているかチェック
+      const productName = productNameInput.value.trim();
+      const spec = specInput.value.trim();
+      const volume = normalizeVolume(volumeInput.value);
+      const storeName = storeNameInput.value.trim();
+      const groupKey = `${productName}\u001f${spec}\u001f${volume}`;
+
+      const group = findGroupByKey(groupKey);
+      const existingRecord = group.find((record) => normalizeText(record.storeName) === normalizeText(storeName));
+
+      if (existingRecord) {
+        const confirmed = window.confirm(`この商品・仕様・容量・店舗は既に登録されています。新規追加ではなく上書きしますか？`);
+        if (!confirmed) {
+          return;
+        }
+
+        // 既存レコードを上書き
+        const stockValues = getStockValues(stockCountInput, stockDateInput);
+        existingRecord.category = categoryInput.value;
+        existingRecord.normalPrice = normalizePrice(normalPriceInput.value);
+        existingRecord.normalPriceDate = normalPriceDateInput.value;
+        existingRecord.salePrice = useSalePriceInput.checked && salePriceInput.value !== "" ? normalizePrice(salePriceInput.value) : "";
+        existingRecord.salePriceDate = useSalePriceInput.checked ? salePriceDateInput.value : "";
+        existingRecord.stockCount = stockValues.stockCount;
+        existingRecord.stockDate = stockValues.stockDate;
+        existingRecord.updatedAt = getNowISO();
+        existingRecord.updatedBy = localUserId;
+
         saveRecords();
         renderDatalist();
         renderRecords();
-        storeNameInput.value = "";
-        normalPriceInput.value = "";
+
+        const selectedCategory = categoryInput.value;
+        form.reset();
         normalPriceDateInput.value = getTodayDateISO();
-        useSalePriceInput.checked = false;
-        salePriceInput.value = "";
-        salePriceDateInput.value = "";
-        saleFields.classList.remove("is-open");
-        storeNameInput.focus();
+        stockDateInput.value = getTodayDateISO();
+        updateSaleFields();
+        renderCategories(selectedCategory, categoryFilter.value);
+        productNameInput.focus();
         return;
       }
 
       const createdAt = getNowISO();
+      const stockValues = getStockValues(stockCountInput, stockDateInput);
       const newRecord = {
         id: createId(),
         productName: productNameInput.value.trim(),
@@ -1733,6 +2036,8 @@
         salePrice: useSalePriceInput.checked && salePriceInput.value !== "" ? normalizePrice(salePriceInput.value) : "",
         salePriceDate: useSalePriceInput.checked ? salePriceDateInput.value : "",
         volume: normalizeVolume(volumeInput.value),
+        stockCount: stockValues.stockCount,
+        stockDate: stockValues.stockDate,
         createdAt,
         updatedAt: createdAt,
         createdBy: localUserId,
@@ -1747,6 +2052,7 @@
       const selectedCategory = categoryInput.value;
       form.reset();
       normalPriceDateInput.value = getTodayDateISO();
+      stockDateInput.value = getTodayDateISO();
       updateSaleFields();
       renderCategories(selectedCategory, categoryFilter.value);
       productNameInput.focus();
@@ -1801,6 +2107,11 @@
 
       if (event.target.matches(".store-add-button")) {
         openStoreAdd(decodeURIComponent(event.target.dataset.groupKey));
+        return;
+      }
+
+      if (event.target.matches(".stock-edit-button")) {
+        openStockEditor(decodeURIComponent(event.target.dataset.groupKey));
         return;
       }
 
@@ -1888,10 +2199,7 @@
         return;
       }
 
-      record.category = editCategoryInput.value;
-      record.productName = editProductNameInput.value.trim();
-      record.spec = editSpecInput.value.trim();
-      record.volume = normalizeVolume(editVolumeInput.value);
+      const oldGroupKey = getRecordGroupKey(record);
       record.storeName = editStoreNameInput.value.trim();
       record.normalPrice = normalizePrice(editNormalPriceInput.value);
       record.normalPriceDate = editNormalPriceDateInput.value;
@@ -1899,9 +2207,13 @@
       record.salePriceDate = editUseSalePriceInput.checked ? editSalePriceDateInput.value : "";
       record.id = record.id || createId();
       record.createdAt = record.createdAt || getNowISO();
-      record.updatedAt = getNowISO();
       record.createdBy = record.createdBy || localUserId;
-      record.updatedBy = localUserId;
+      updateProductAttributesForGroup(oldGroupKey, {
+        category: editCategoryInput.value,
+        productName: editProductNameInput.value.trim(),
+        spec: editSpecInput.value.trim(),
+        volume: normalizeVolume(editVolumeInput.value)
+      });
 
       saveRecords();
       renderDatalist();
@@ -1941,6 +2253,42 @@
       closeDetail();
     });
     cancelEditButton.addEventListener("click", closeDetail);
+
+    stockForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const groupKey = stockGroupKeyInput.value;
+      if (!groupKey) {
+        closeStockEditor();
+        return;
+      }
+
+      const previousStockValues = getGroupStockValues(groupKey);
+      const stockCountText = String(stockModalCountInput.value || "").trim();
+      const normalizedStock = normalizeStockValue(stockModalCountInput.value, stockModalDateInput.value);
+      const previousCount = previousStockValues.stockCount === "" ? "" : Number(previousStockValues.stockCount);
+      const nextCount = normalizedStock.stockCount === "" ? "" : Number(normalizedStock.stockCount);
+      const hasCountChanged = previousCount !== nextCount;
+
+      if (normalizedStock.stockCount === "") {
+        updateGroupStock(groupKey, "", "");
+      } else {
+        const nextDate = hasCountChanged ? getTodayDateISO() : (stockModalDateInput.value || previousStockValues.stockDate || getTodayDateISO());
+        updateGroupStock(groupKey, normalizedStock.stockCount, nextDate);
+      }
+
+      saveRecords();
+      renderRecords();
+      closeStockEditor();
+    });
+
+    closeStockButton.addEventListener("click", closeStockEditor);
+    cancelStockButton.addEventListener("click", closeStockEditor);
+    stockPanel.addEventListener("click", (event) => {
+      if (event.target === stockPanel) {
+        closeStockEditor();
+      }
+    });
 
     detailPanel.addEventListener("click", (event) => {
       if (event.target === detailPanel) {
