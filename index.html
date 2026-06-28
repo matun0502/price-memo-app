@@ -1514,6 +1514,9 @@
       editVolumeInput.readOnly = true;
       editVolumeInput.classList.add("readonly-field");
       editVolumeInput.tabIndex = -1;
+      editStoreNameInput.readOnly = true;
+      editStoreNameInput.classList.add("readonly-field");
+      editStoreNameInput.tabIndex = -1;
 
       detailPanel.classList.add("is-open");
       detailPanel.setAttribute("aria-hidden", "false");
@@ -1540,7 +1543,7 @@
       editSaleFields.classList.remove("is-open");
       detailPanel.querySelector(".detail-box").scrollTop = 0;
 
-      // 商品名・仕様・容量を編集可能に戻す
+      // 商品名・仕様・容量・店舗を編集可能に戻す
       editProductNameInput.readOnly = false;
       editProductNameInput.classList.remove("readonly-field");
       editProductNameInput.tabIndex = 0;
@@ -1550,6 +1553,9 @@
       editVolumeInput.readOnly = false;
       editVolumeInput.classList.remove("readonly-field");
       editVolumeInput.tabIndex = 0;
+      editStoreNameInput.readOnly = false;
+      editStoreNameInput.classList.remove("readonly-field");
+      editStoreNameInput.tabIndex = 0;
     }
 
     function formatYen(number) {
