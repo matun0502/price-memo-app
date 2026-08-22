@@ -1,4 +1,5 @@
-import { loadRecords, saveRecords } from "./storage.js";
+import { saveRecords } from "./storage.js";
+import { loadRecords } from "./firebase.js";
 import {
   normalizeText,
   normalizeVolume,
@@ -73,7 +74,7 @@ const storeNameOptions = document.getElementById("storeNameOptions");
 const specOptions = document.getElementById("specOptions");
 
 const defaultCategories = ["洗濯", "トイレ", "お風呂", "オーラル", "キッチン", "リビング", "薬"];
-let records = loadRecords();
+let records = [];
 let expandedGroups = new Set();
 let storeAddMode = false;
 let storeAddGroupKey = null;
@@ -1038,11 +1039,13 @@ function handleDetailPanelClick(event) {
   }
 }
 
-function init() {
+async function init() {
   initAccordions();
   normalPriceDateInput.value = getTodayDateISO();
   stockDateInput.value = getTodayDateISO();
   updateSaleFields();
+
+  records = await loadRecords();
 
   if (ensureUniqueRecordIds()) {
     saveRecords(records);

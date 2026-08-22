@@ -1,6 +1,6 @@
 // Firebase 初期化と Firestore 接続 (npm モジュール版 SDK を使用)
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { collection, getDocs, getFirestore } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjnZAVLTIVu3i9K5VztcAcvGZL_2yvUL8",
@@ -16,3 +16,13 @@ export const app = initializeApp(firebaseConfig);
 
 // Firestore データベース
 export const db = getFirestore(app);
+
+// Firestore から価格記録を全件読み込みます
+export async function loadRecords() {
+  const querySnapshot = await getDocs(collection(db, "dailyPriceRecords"));
+
+  return querySnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+}
