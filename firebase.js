@@ -1,6 +1,6 @@
 // Firebase 初期化と Firestore 接続 (npm モジュール版 SDK を使用)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-import { collection, getDocs, getFirestore } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import { collection, doc, getDocs, getFirestore, writeBatch } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjnZAVLTIVu3i9K5VztcAcvGZL_2yvUL8",
@@ -25,4 +25,20 @@ export async function loadRecords() {
     id: doc.id,
     ...doc.data()
   }));
+}
+
+// 価格記録を Firestore へまとめて保存します
+export async function saveRecords(records) {
+  const batch = writeBatch(db);
+
+  records.forEach((record) => {
+    if (!record.id) {
+      throw new Error("Firestoreへ保存するレコードにはidが必要です。");
+    }
+
+    const recordRef = doc(db, "dailyPriceRecords", String(record.id));
+    batch.set(recordRef, record);
+  });
+
+  await batch.commit();
 }

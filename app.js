@@ -1,5 +1,4 @@
-import { saveRecords } from "./storage.js";
-import { loadRecords } from "./firebase.js";
+import { loadRecords, saveRecords } from "./firebase.js";
 import {
   normalizeText,
   normalizeVolume,
@@ -123,12 +122,9 @@ function ensureUniqueRecordIds() {
   return changed;
 }
 
-function saveAndRender() {
-  if (ensureUniqueRecordIds()) {
-    saveRecords(records);
-  } else {
-    saveRecords(records);
-  }
+async function saveAndRender() {
+  ensureUniqueRecordIds();
+  await saveRecords(records);
   renderDatalist();
   renderRecords();
 }
@@ -361,9 +357,7 @@ function closeStockEditor() {
 }
 
 function renderRecords() {
-  if (ensureUniqueRecordIds()) {
-    saveRecords(records);
-  }
+  ensureUniqueRecordIds();
 
   const filteredRecords = filterRecords(records, {
     category: categoryFilter.value,
@@ -513,6 +507,19 @@ function updateSaleFields() {
     salePriceDateInput.value = "";
   }
   requestAnimationFrame(refreshOpenAccordions);
+}
+
+function updateEditSaleFields() {
+  if (editUseSalePriceInput.checked) {
+    editSaleFields.classList.add("is-open");
+    if (editSalePriceDateInput.value === "") {
+      editSalePriceDateInput.value = getTodayDateISO();
+    }
+  } else {
+    editSaleFields.classList.remove("is-open");
+    editSalePriceInput.value = "";
+    editSalePriceDateInput.value = "";
+  }
 }
 
 function enterStoreAddMode(group) {
@@ -723,7 +730,7 @@ function refreshOpenAccordions() {
   });
 }
 
-function handleFormSubmit(event) {
+async function handleFormSubmit(event) {
   event.preventDefault();
   if (!form.reportValidity()) {
     return;
@@ -736,7 +743,7 @@ function handleFormSubmit(event) {
     }
 
     const addedGroupKey = storeAddGroupKey;
-    saveAndRender();
+    await saveAndRender();
     exitStoreAddMode();
     form.reset();
     normalPriceDateInput.value = getTodayDateISO();
@@ -785,7 +792,7 @@ function handleFormSubmit(event) {
     existingRecord.updatedAt = getNowISO();
     existingRecord.updatedBy = "local-user";
 
-    saveAndRender();
+    await saveAndRender();
     const selectedCategory = categoryInput.value;
     form.reset();
     normalPriceDateInput.value = getTodayDateISO();
@@ -818,7 +825,7 @@ function handleFormSubmit(event) {
   };
 
   records.unshift(newRecord);
-  saveAndRender();
+  await saveAndRender();
 
   const selectedCategory = categoryInput.value;
   form.reset();
@@ -829,7 +836,7 @@ function handleFormSubmit(event) {
   productNameInput.focus();
 }
 
-function handleListClick(event) {
+async function handleListClick(event) {
   if (event.target.matches(".store-delete-button")) {
     const recordId = event.target.dataset.id;
     const record = records.find((item) => item.id === recordId);
@@ -852,7 +859,7 @@ function handleListClick(event) {
       }
     }
 
-    saveAndRender();
+    await saveAndRender();
     return;
   }
 
@@ -880,7 +887,7 @@ function handleListClick(event) {
     }
 
     deleteProductGroup(groupKey);
-    saveAndRender();
+    await saveAndRender();
     return;
   }
 
@@ -926,7 +933,7 @@ function handleListKeydown(event) {
   }
 }
 
-function handleEditSubmit(event) {
+async function handleEditSubmit(event) {
   event.preventDefault();
   if (!editForm.reportValidity()) {
     return;
@@ -960,7 +967,7 @@ function handleEditSubmit(event) {
     updatedBy: "local-user"
   });
 
-  saveAndRender();
+  await saveAndRender();
   closeDetail();
 }
 
@@ -980,7 +987,7 @@ function deleteStoreRecord(recordId) {
   return groupKey;
 }
 
-function deleteDetailRecord(event) {
+async function deleteDetailRecord(event) {
   const recordId = editIdInput.value;
   const record = records.find((item) => item.id === recordId);
   if (!record) {
@@ -1003,11 +1010,11 @@ function deleteDetailRecord(event) {
     }
   }
 
-  saveAndRender();
+  await saveAndRender();
   closeDetail();
 }
 
-function handleStockSubmit(event) {
+async function handleStockSubmit(event) {
   event.preventDefault();
 
   const groupKey = stockGroupKeyInput.value;
@@ -1029,7 +1036,7 @@ function handleStockSubmit(event) {
     updateGroupStock(groupKey, normalizedStock.stockCount, nextDate);
   }
 
-  saveAndRender();
+  await saveAndRender();
   closeStockEditor();
 }
 
@@ -1048,7 +1055,7 @@ async function init() {
   records = await loadRecords();
 
   if (ensureUniqueRecordIds()) {
-    saveRecords(records);
+    await saveRecords(records);
   }
 
   renderCategories();
@@ -1070,7 +1077,7 @@ async function init() {
     prepareNewRecordForm();
   });
   useSalePriceInput.addEventListener("change", updateSaleFields);
-  editUseSalePriceInput.addEventListener("change", updateSaleFields);
+  editUseSalePriceInput.addEventListener("change", updateEditSaleFields);
   list.addEventListener("click", handleListClick);
   list.addEventListener("keydown", handleListKeydown);
   editForm.addEventListener("submit", handleEditSubmit);
