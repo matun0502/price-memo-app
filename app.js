@@ -1,4 +1,9 @@
-import { loadRecords, saveRecords } from "./firebase.js";
+import {
+  loadRecords,
+  saveRecords,
+  deleteStoreRecord as deleteStoreRecordFromFirestore,
+  deleteProductGroup as deleteProductGroupFromFirestore
+} from "./firebase.js";
 import {
   normalizeText,
   normalizeVolume,
@@ -851,7 +856,11 @@ async function handleListClick(event) {
       return;
     }
 
-    const groupKey = deleteStoreRecord(recordId);
+    const groupKey = await deleteStoreRecord(recordId);
+    if (!groupKey) {
+      return;
+    }
+
     if (groupKey) {
       const remainingGroupRecords = records.filter((item) => getRecordGroupKey(item) === groupKey);
       if (remainingGroupRecords.length === 0) {
@@ -886,7 +895,11 @@ async function handleListClick(event) {
       return;
     }
 
-    deleteProductGroup(groupKey);
+    const deleted = await deleteProductGroup(groupKey);
+    if (!deleted) {
+      return;
+    }
+
     await saveAndRender();
     return;
   }
@@ -971,14 +984,33 @@ async function handleEditSubmit(event) {
   closeDetail();
 }
 
-function deleteProductGroup(groupKey) {
+async function deleteProductGroup(groupKey) {
+  const groupRecords = records.filter((record) => getRecordGroupKey(record) === groupKey);
+
+  try {
+    await deleteProductGroupFromFirestore(groupRecords.map((record) => record.id));
+  } catch (error) {
+    console.error("商品の削除に失敗しました。", error);
+    window.alert("商品の削除に失敗しました。もう一度お試しください。");
+    return false;
+  }
+
   records = records.filter((record) => getRecordGroupKey(record) !== groupKey);
   expandedGroups.delete(groupKey);
+  return true;
 }
 
-function deleteStoreRecord(recordId) {
+async function deleteStoreRecord(recordId) {
   const record = records.find((item) => item.id === recordId);
   if (!record) {
+    return null;
+  }
+
+  try {
+    await deleteStoreRecordFromFirestore(recordId);
+  } catch (error) {
+    console.error("店舗データの削除に失敗しました。", error);
+    window.alert("店舗データの削除に失敗しました。もう一度お試しください。");
     return null;
   }
 
@@ -1002,7 +1034,11 @@ async function deleteDetailRecord(event) {
     return;
   }
 
-  const groupKey = deleteStoreRecord(recordId);
+  const groupKey = await deleteStoreRecord(recordId);
+  if (!groupKey) {
+    return;
+  }
+
   if (groupKey) {
     const remainingGroupRecords = records.filter((item) => getRecordGroupKey(item) === groupKey);
     if (remainingGroupRecords.length === 0) {

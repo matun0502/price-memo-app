@@ -1,6 +1,6 @@
 // Firebase 初期化と Firestore 接続 (npm モジュール版 SDK を使用)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
-import { collection, doc, getDocs, getFirestore, writeBatch } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+import { collection, deleteDoc, doc, getDocs, getFirestore, writeBatch } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCjnZAVLTIVu3i9K5VztcAcvGZL_2yvUL8",
@@ -41,4 +41,14 @@ export async function saveRecords(records) {
   });
 
   await batch.commit();
+}
+
+// 指定した価格記録を Firestore から削除します
+export async function deleteStoreRecord(recordId) {
+  await deleteDoc(doc(db, "dailyPriceRecords", String(recordId)));
+}
+
+// 商品グループに属する価格記録を Firestore から削除します
+export async function deleteProductGroup(recordIds) {
+  await Promise.all(recordIds.map((recordId) => deleteStoreRecord(recordId)));
 }
